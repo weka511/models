@@ -1,3 +1,22 @@
+to setup
+  clear-all
+  prepare-breeding-areas
+  create-totem-animals
+  create-people
+  reset-ticks
+end
+
+to go
+end
+
+to prepare-breeding-areas
+end
+
+to create-totem-animals
+end
+
+to  create-people
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
@@ -25,6 +44,85 @@ GRAPHICS-WINDOW
 1
 ticks
 30.0
+
+BUTTON
+15
+15
+79
+48
+Setup
+setup
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+91
+18
+154
+51
+Go
+go
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+0
+
+SLIDER
+15
+70
+187
+101
+number-of-skins
+number-of-skins
+2
+12
+3
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+25
+130
+197
+163
+number-of-people
+number-of-people
+0
+100
+50
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+20
+195
+192
+228
+number-of-animals
+number-of-animals
+0
+100
+50
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -387,5 +485,5 @@ Line -7500403 true 150 150 90 180
 Line -7500403 true 150 150 210 180
 
 @#$#@#$#@
-0
+1
 @#$#@#$#@
