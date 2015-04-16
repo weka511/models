@@ -1,21 +1,32 @@
+breed [people person]
+breed [animals animal]
 to setup
   clear-all
   prepare-breeding-areas
-  create-totem-animals
-  create-people
+  set-default-shape animals "turtle"
+  create-animals number-of-animals [
+     setxy random-xcor random-ycor
+    ]
+  set-default-shape people "person"
+  create-people number-of-people [
+     setxy random-xcor random-ycor
+    ]
   reset-ticks
 end
 
 to go
+  tick
 end
 
 to prepare-breeding-areas
+ 
 end
 
-to create-totem-animals
-end
 
-to  create-people
+
+
+to-report get-number-skins
+  report 4
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -80,28 +91,13 @@ NIL
 0
 
 SLIDER
-15
-70
-187
-101
-number-of-skins
-number-of-skins
-2
-12
-3
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
 25
 130
 197
 163
 number-of-people
 number-of-people
-0
+5
 100
 50
 1
@@ -109,16 +105,26 @@ number-of-people
 NIL
 HORIZONTAL
 
-SLIDER
-20
-195
-192
-228
-number-of-animals
-number-of-animals
+CHOOSER
+30
+65
+167
+110
+skin-system
+skin-system
+"Martuthunira (4)"
 0
+
+SLIDER
+30
+185
+202
+218
+number-of-animals
+number-of-animals
+10
 100
-50
+10
 1
 1
 NIL
@@ -127,7 +133,7 @@ HORIZONTAL
 @#$#@#$#@
 ## WHAT IS IT?
 
-Model the hunting ruls of some Aboriginal groups.
+Model the rules that some Aboriginal groups have created to preserve animals.
 
 ## HOW IT WORKS
 
@@ -467,7 +473,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.0.5
+NetLogo 5.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
