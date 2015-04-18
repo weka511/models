@@ -1,20 +1,30 @@
 breed [people person]
+people-own [ energy gender skin ]
+
 breed [animals animal]
+
 to setup
   clear-all
   prepare-breeding-areas
-  set-default-shape animals "turtle"
+  set-default-shape animals "cow"
   create-animals number-of-animals [
      setxy random-xcor random-ycor
     ]
   set-default-shape people "person"
   create-people number-of-people [
      setxy random-xcor random-ycor
+     set gender random 2
+     set skin random 4
+     set color get-color skin
     ]
   reset-ticks
 end
 
 to go
+  ask people [
+    move
+    mate
+    ]
   tick
 end
 
@@ -22,17 +32,56 @@ to prepare-breeding-areas
  
 end
 
+to move
+  rt random 1
+  lt random 1
+  fd 1
+  set energy energy - 0.5
+end
 
-
+to-report get-color [skin-number]
+  report 10 * skin-number + 5
+end
 
 to-report get-number-skins
   report 4
 end
+
+to mate
+  let my-gender gender
+  let my-skin skin
+  ask other people-here [
+    if my-gender = 0 and gender = 1 [
+      let new-skin get-child my-skin skin
+      if new-skin > -1[
+        ask patch-here [
+          sprout-people 1 [
+            set gender random 2
+            set skin new-skin
+            set color get-color skin
+            ]
+          ]
+      ]
+  ]]
+end
+
+; Section name (female)  Marries (male)  Children
+; 0 Karimarra  1 Panaka  2 Pal.yarri
+; 1 Panaka  0 Karimarra  3 Purungu
+; 2 Pal.yarri  3 Purungu  0 Karimarra
+; 3 Purungu  2 Pal.yarri  1 Panaka
+to-report get-child[father mother]
+  if father = 0 and mother = 1 [report 2]
+  if father = 1 and mother = 0 [report 3]
+  if father = 2 and mother = 3 [report 0]
+  if father = 3 and mother = 2 [report 1]
+  report -1
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
+510
 10
-649
+949
 470
 16
 16
@@ -99,7 +148,7 @@ number-of-people
 number-of-people
 5
 100
-50
+37
 1
 1
 NIL
@@ -122,18 +171,44 @@ SLIDER
 218
 number-of-animals
 number-of-animals
-10
+0
 100
-10
+0
 1
 1
 NIL
 HORIZONTAL
 
+PLOT
+35
+270
+400
+485
+plot 1
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count people with [skin = 0]"
+"pen-1" 1.0 0 -7500403 true "" "plot count people with [skin = 1]"
+"pen-2" 1.0 0 -2674135 true "" "plot count people with [skin = 2]"
+"pen-3" 1.0 0 -955883 true "" "plot count people with [skin = 3]"
+
 @#$#@#$#@
 ## WHAT IS IT?
 
 Model the rules that some Aboriginal groups have created to preserve animals.
+
+Several years agoo I was struck by a description of the rules for conserving totem animals, which show evidence of having been designed very carefully. This model is intended as a respectful exploration of the rules, to verify my belief that they ensure stability of the population. I've created this model in the hope it will answer two questions.
+
+  * Do the marriage rules help keep the kin system stable (e.g., what hapens if there is a gross imbalance in ratios?
+  * Do the food rules ensure that the mix of species remanins stable?
 
 ## HOW IT WORKS
 
@@ -165,7 +240,11 @@ Model the rules that some Aboriginal groups have created to preserve animals.
 
 ## CREDITS AND REFERENCES
 
-(a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
+
+
+  * [Link to model](https://github.com/weka511/models)
+
+  * [Description of kinship system](http://en.wikipedia.org/wiki/Australian_Aboriginal_kinship)
 @#$#@#$#@
 default
 true
