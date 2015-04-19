@@ -94,18 +94,18 @@ end
 to mate
   if age > 25 [
       let my-gender gender
-  let my-skin skin
-  ask other people-here [
-    if my-gender = 0 and gender = 1 [
-      let new-skin get-child my-skin skin
-      if new-skin > -1[
-        ask patch-here [
-          sprout-people 1 [
-            set gender random 2
-            set skin new-skin
-            set color get-color skin
-            set energy person-energy-start
-            set age 0
+      let my-skin skin
+      ask other people-here [
+        if my-gender = 0 and gender = 1 [
+          let new-skin get-child my-skin skin
+          if new-skin > -1[
+            ask patch-here [
+              sprout-people 1 [
+                set gender random 2
+                set skin new-skin
+                set color get-color skin
+                set energy person-energy-start
+                set age 0
             ]
           ]
         set energy energy - 1
@@ -145,9 +145,14 @@ to eat-grass  ;; sheep procedure
 end
 
 to reproduce-animal  ;; sheep procedure
-  if random-float 100 < animal-reproduce [  ;; throw "dice" to see if you will reproduce
+  let skin-for-breed get-skin-for-breeding-ground xcor ycor
+  if skin = skin-for-breed and random-float 100 < animal-reproduce [  ;; throw "dice" to see if you will reproduce
     set energy (energy / 2)                ;; divide energy between parent and offspring
-    hatch 1 [ rt random-float 360 fd 1 ]   ;; hatch an offspring and move it forward 1 step
+    hatch 1 [
+       set color get-color skin
+       rt random-float 360
+       fd 1
+       ]   ;; hatch an offspring and move it forward 1 step
   ]
 end
 
@@ -161,6 +166,14 @@ to-report get-child[father mother]
   if father = 1 and mother = 0 [report 3]
   if father = 2 and mother = 3 [report 0]
   if father = 3 and mother = 2 [report 1]
+  report -1
+end
+
+to-report get-skin-for-breeding-ground [x y]
+  if min-pxcor <= x and min-pxcor + width-breeding-ground >= x and max-pycor >= y and max-pycor - width-breeding-ground <= y [report 0]
+  if max-pxcor >= x and max-pxcor - width-breeding-ground <= x and max-pycor >= y and max-pycor - width-breeding-ground <= y [report 1]
+  if min-pxcor <= x and min-pxcor + width-breeding-ground >= x and min-pycor <= y and min-pycor + width-breeding-ground >= y [report 2]
+  if max-pxcor >= x and max-pxcor - width-breeding-ground <= x and min-pycor <= y and min-pycor + width-breeding-ground >= y  [report 3]
   report -1
 end
 @#$#@#$#@
@@ -325,7 +338,7 @@ maximum-age
 maximum-age
 0
 1000
-431
+834
 1
 1
 NIL
@@ -364,7 +377,10 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot count animals"
+"default" 1.0 0 -16777216 true "" "plot count animals with [skin = 0]"
+"pen-1" 1.0 0 -7500403 true "" "plot count animals with [skin = 1]"
+"pen-2" 1.0 0 -2674135 true "" "plot count animals with [skin = 2]"
+"pen-3" 1.0 0 -955883 true "" "plot count animals with [skin = 3]"
 
 PLOT
 15
@@ -393,17 +409,17 @@ grass-regrowth-time
 grass-regrowth-time
 0
 30
-10
+17
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-195
-220
-367
-253
+380
+110
+552
+143
 animal-gain-from-food
 animal-gain-from-food
 0
@@ -427,6 +443,21 @@ animal-reproduce
 1
 1
 %
+HORIZONTAL
+
+SLIDER
+390
+165
+567
+198
+width-breeding-ground
+width-breeding-ground
+1
+5
+4
+1
+1
+NIL
 HORIZONTAL
 
 @#$#@#$#@
