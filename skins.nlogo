@@ -1,42 +1,86 @@
 breed [people person]
-people-own [ energy gender skin ]
+people-own [ gender age]
 
 breed [animals animal]
 
+turtles-own [energy skin]
+
+patches-own [countdown]
+
 to setup
   clear-all
+  provide-food-for-animals
   prepare-breeding-areas
-  set-default-shape animals "cow"
-  create-animals number-of-animals [
-     setxy random-xcor random-ycor
-    ]
-  set-default-shape people "person"
-  create-people number-of-people [
-     setxy random-xcor random-ycor
-     set gender random 2
-     set skin random 4
-     set color get-color skin
-    ]
+  setup-animals
+  setup-people
   reset-ticks
 end
 
-to go
+to go-animals
+  ask animals [
+    move-animal
+    set energy energy - 1
+    eat-grass
+    death
+    reproduce-animal
+  ]
+  ask patches [ grow-grass ]
+  tick
+end
+
+to go-people
   ask people [
-    move
+    move-people 
     mate
+    cull
     ]
   tick
+end
+
+to setup-animals
+  set-default-shape animals "cow"
+  create-animals number-of-animals [
+     setxy random-xcor random-ycor
+     set skin random 4
+     set color get-color skin
+     set energy random (2 * animal-gain-from-food)
+    ]
+end
+
+to setup-people
+  set-default-shape people "person"
+  create-people number-of-people [
+    setxy random-xcor random-ycor
+    set gender random 2
+    set skin random 4
+    set color get-color skin
+    set energy person-energy-start
+    set age 0
+    ]
+end
+
+to provide-food-for-animals
+      ask patches [
+      set pcolor one-of [green brown]
+      if-else pcolor = green
+        [ set countdown grass-regrowth-time ]
+        [ set countdown random grass-regrowth-time ]
+    ]
 end
 
 to prepare-breeding-areas
  
 end
 
-to move
-  rt random 1
-  lt random 1
-  fd 1
-  set energy energy - 0.5
+to move-animal
+  rt random 45
+  fd random 10
+end
+
+to move-people
+  rt random 45
+  fd random 10
+  set energy energy - person-cost-move
 end
 
 to-report get-color [skin-number]
@@ -48,7 +92,8 @@ to-report get-number-skins
 end
 
 to mate
-  let my-gender gender
+  if age > 25 [
+      let my-gender gender
   let my-skin skin
   ask other people-here [
     if my-gender = 0 and gender = 1 [
@@ -59,10 +104,51 @@ to mate
             set gender random 2
             set skin new-skin
             set color get-color skin
+            set energy person-energy-start
+            set age 0
             ]
           ]
+        set energy energy - 1
+
       ]
-  ]]
+  ]]]
+end
+
+to cull
+  set age age + 1
+  if age > maximum-age [
+    if energy < 0.5 [die]
+  ]
+end
+
+to death  ;; turtle procedure
+  ;; when energy dips below zero, die
+  if energy < 0 [ die ]
+end
+
+to grow-grass  ;; patch procedure
+  ;; countdown on brown patches: if reach 0, grow some grass
+  if pcolor = brown [
+    ifelse countdown <= 0
+      [ set pcolor green
+        set countdown grass-regrowth-time ]
+      [ set countdown countdown - 1 ]
+  ]
+end
+
+to eat-grass  ;; sheep procedure
+  ;; sheep eat grass, turn the patch brown
+  if pcolor = green [
+    set pcolor brown
+    set energy energy + animal-gain-from-food  ;; sheep gain energy by eating
+  ]
+end
+
+to reproduce-animal  ;; sheep procedure
+  if random-float 100 < animal-reproduce [  ;; throw "dice" to see if you will reproduce
+    set energy (energy / 2)                ;; divide energy between parent and offspring
+    hatch 1 [ rt random-float 360 fd 1 ]   ;; hatch an offspring and move it forward 1 step
+  ]
 end
 
 ; Section name (female)  Marries (male)  Children
@@ -79,13 +165,13 @@ to-report get-child[father mother]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-510
+930
 10
-949
-470
+1549
+650
 16
 16
-13.0
+18.455
 1
 10
 1
@@ -123,12 +209,12 @@ NIL
 1
 
 BUTTON
-91
-18
-154
-51
-Go
-go
+225
+20
+312
+53
+Go People
+go-people
 T
 1
 T
@@ -140,15 +226,15 @@ NIL
 0
 
 SLIDER
-25
-130
-197
-163
+200
+70
+372
+103
 number-of-people
 number-of-people
-5
+0
 100
-37
+0
 1
 1
 NIL
@@ -165,26 +251,109 @@ skin-system
 0
 
 SLIDER
-30
-185
-202
-218
+380
+70
+552
+103
 number-of-animals
 number-of-animals
 0
 100
-0
+16
 1
 1
 NIL
 HORIZONTAL
 
 PLOT
-35
-270
-400
-485
-plot 1
+10
+465
+890
+620
+People
+NIL
+NIL
+0.0
+10.0
+0.0
+1.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count people with [skin = 0]"
+"pen-1" 1.0 0 -7500403 true "" "plot count people with [skin = 1]"
+"pen-2" 1.0 0 -2674135 true "" "plot count people with [skin = 2]"
+"pen-3" 1.0 0 -955883 true "" "plot count people with [skin = 3]"
+
+SLIDER
+200
+105
+372
+138
+person-energy-start
+person-energy-start
+0
+100
+49
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+200
+140
+372
+173
+person-cost-move
+person-cost-move
+0
+10
+1.5
+0.5
+1
+NIL
+HORIZONTAL
+
+SLIDER
+200
+180
+372
+213
+maximum-age
+maximum-age
+0
+1000
+431
+1
+1
+NIL
+HORIZONTAL
+
+BUTTON
+380
+15
+472
+48
+Go Animals
+go-animals
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+PLOT
+10
+295
+890
+460
+Animals
 NIL
 NIL
 0.0
@@ -195,10 +364,70 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot count people with [skin = 0]"
-"pen-1" 1.0 0 -7500403 true "" "plot count people with [skin = 1]"
-"pen-2" 1.0 0 -2674135 true "" "plot count people with [skin = 2]"
-"pen-3" 1.0 0 -955883 true "" "plot count people with [skin = 3]"
+"default" 1.0 0 -16777216 true "" "plot count animals"
+
+PLOT
+15
+640
+890
+790
+Plants
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count patches with [pcolor = green]"
+
+SLIDER
+560
+70
+732
+103
+grass-regrowth-time
+grass-regrowth-time
+0
+30
+10
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+195
+220
+367
+253
+animal-gain-from-food
+animal-gain-from-food
+0
+50
+17.5
+0.5
+1
+NIL
+HORIZONTAL
+
+SLIDER
+200
+260
+372
+293
+animal-reproduce
+animal-reproduce
+1
+20
+5
+1
+1
+%
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
