@@ -26,7 +26,7 @@ to setup-animals
      set skin random get-number-skins
      set color get-color skin
      set energy random (20 * animal-gain-from-food)
-     set age maximum-animal-age
+     set age 0
     ]
 end
 
@@ -38,7 +38,7 @@ to setup-people
     set skin random 4
     set color get-color skin
     set energy person-energy-start
-    set age maximum-person-age
+    set age 0
     ]
 end
 
@@ -60,14 +60,14 @@ to go
       if energy < satiation-energy [
         catch-animal
       ]
-      death 
+      death person-life-expentancy
       reproduce-people
     ]
     ask animals [
       move-animal
       set energy energy - 1
       eat-grass
-      death
+      death animal-life-expentancy
       reproduce-animal
   ]
   ask patches [ grow-grass ]
@@ -111,12 +111,12 @@ to-report get-number-skins
 end
 
 to  reproduce-people
-  if age > 25 [
+  if age > 25 and energy > 1.5 * person-energy-start [
       let my-gender gender
       let my-skin skin
       let  found-partner FALSE
       ask other people-here [
-        if my-gender = 0 and gender = 1 [
+        if my-gender = 0 and gender = 1 and energy > 1.5 * person-energy-start [
           let new-skin get-child my-skin skin
           if new-skin > -1 [
             set  found-partner TRUE
@@ -125,7 +125,7 @@ to  reproduce-people
                 set skin new-skin
                 set color get-color skin
                 set energy person-energy-start
-                set age maximum-person-age
+                set age 0
             ]
             set energy energy - 0.9 * person-energy-start
           ] ;; if new skin
@@ -139,9 +139,9 @@ end
 
 
 
-to death  ;; turtle procedure
-  set age age - 1
-  if energy < 0 or random age = 0 [ die ]
+to death [life-expectancy]
+  set age age + 1
+  if energy < 0 or random life-expectancy = 0 [ die ]
 end
 
 to grow-grass  ;; patch procedure
@@ -168,7 +168,7 @@ to reproduce-animal  ;; sheep procedure
     set energy (energy / 2)                ;; divide energy between parent and offspring
     hatch 1 [
        set color get-color skin
-       set age maximum-animal-age
+       set age animal-life-expentancy
        rt random-float 360
        fd 1
        ]   ;; hatch an offspring and move it forward 1 step
@@ -344,10 +344,10 @@ HORIZONTAL
 SLIDER
 200
 180
-372
+382
 213
-maximum-person-age
-maximum-person-age
+person-life-expentancy
+person-life-expentancy
 0
 1000
 478
@@ -434,7 +434,7 @@ animal-reproduce
 animal-reproduce
 1
 50
-26
+50
 1
 1
 %
@@ -537,13 +537,13 @@ HORIZONTAL
 SLIDER
 405
 225
-577
+582
 258
-maximum-animal-age
-maximum-animal-age
+animal-life-expentancy
+animal-life-expentancy
 0
 500
-54
+56
 1
 1
 NIL
