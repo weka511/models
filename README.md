@@ -10,12 +10,17 @@ Several years agoo I was struck by a description of the rules for conserving tot
 There are two types of rules.
 
  * Who may eat which types of animal
- * Who may marry whom, and the skin associated with the offspring.
+ * Who may marry whom, and the *skin* associated with the offspring.
 
 ### Who may eat which types of animal
 
 Each person has a "skin". They may not eat the animal associated with that skin, and they must protect the breeding ground associated with their animal by any means at all.
 
-### Who may marry whom, and the skin associated with the offspring.
+### Who may marry whom, and the *skin* associated with the offspring.
 
+ * Everyone belongs to a *skin*
+ * The husband and wife must be from different skins; a male can martry a female from one specified skin, only, and vice versa.
+ * The child belongs to a different skin again, which is deetrmined by the skins of the father and mother.
+
+Some examples of rules may be found at [the Wikipedia page on Aboriginal Kinship](http://en.wikipedia.org/wiki/Australian_Aboriginal_kinship)
 
