@@ -1,5 +1,7 @@
-# models
+# Models
 Netlogo models inspired by Scott Page's course
+
+ * skins
 
 ## skins
 
@@ -23,4 +25,12 @@ Each person has a "skin". They may not eat the animal associated with that skin,
  * The child belongs to a different skin again, which is deetrmined by the skins of the father and mother.
 
 Some examples of rules may be found at [the Wikipedia page on Aboriginal Kinship](http://en.wikipedia.org/wiki/Australian_Aboriginal_kinship)
+
+
+|Section name (female)|Marries (male)|Children|
+|---------------------|--------------|--------|
+|Karimarra|Panaka|Pal.yarri|
+|Panaka|Karimarra|Purungu|
+|Pal.yarri|Purungu|Karimarra|
+|Purungu|Pal.yarri|Panaka|
 
