@@ -1,49 +1,32 @@
-breed [people person]
-people-own [ gender age]
 
-breed [animals animal]
 
-turtles-own [energy skin]
+turtles-own [energy skin age]
 
 patches-own [countdown]
 
+breed [people person]
+people-own [ gender ]
+
+breed [animals animal]
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 to setup
   clear-all
-  provide-food-for-animals
-  prepare-breeding-areas
+  setup-food-for-animals
   setup-animals
   setup-people
   reset-ticks
-end
-
-to go-animals
-  ask animals [
-    move-animal
-    set energy energy - 1
-    eat-grass
-    death
-    reproduce-animal
-  ]
-  ask patches [ grow-grass ]
-  tick
-end
-
-to go-people
-  ask people [
-    move-people 
-    mate
-    cull
-    ]
-  tick
 end
 
 to setup-animals
   set-default-shape animals "cow"
   create-animals number-of-animals [
      setxy random-xcor random-ycor
-     set skin random 4
+     set skin random get-number-skins
      set color get-color skin
-     set energy random (2 * animal-gain-from-food)
+     set energy random (20 * animal-gain-from-food)
+     set age maximum-animal-age
     ]
 end
 
@@ -55,11 +38,11 @@ to setup-people
     set skin random 4
     set color get-color skin
     set energy person-energy-start
-    set age 0
+    set age maximum-person-age
     ]
 end
 
-to provide-food-for-animals
+to setup-food-for-animals
       ask patches [
       set pcolor one-of [green brown]
       if-else pcolor = green
@@ -68,13 +51,49 @@ to provide-food-for-animals
     ]
 end
 
-to prepare-breeding-areas
- 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+to go
+    ask people [
+      move-people
+      set energy energy - person-cost-move
+      if energy < satiation-energy [
+        catch-animal
+      ]
+      death 
+      reproduce-people
+    ]
+    ask animals [
+      move-animal
+      set energy energy - 1
+      eat-grass
+      death
+      reproduce-animal
+  ]
+  ask patches [ grow-grass ]
+  tick
+end
+
+
+to catch-animal
+  let my-skin  skin
+  let prey one-of animals-here;; with [skin != my-skin]
+  if prey != nobody [
+    let food-energy 0
+    ask prey [
+      let skin-for-breed get-skin-for-breeding-ground xcor ycor
+      if skin-for-breed = -1 and skin != my-skin [
+        set food-energy energy
+        die
+      ]
+    ]
+    set energy energy + human-gain-from-food * food-energy / 100
+ ]
 end
 
 to move-animal
   rt random 45
-  fd random 10
+  fd random animal-speed
 end
 
 to move-people
@@ -91,39 +110,38 @@ to-report get-number-skins
   report 4
 end
 
-to mate
+to  reproduce-people
   if age > 25 [
       let my-gender gender
       let my-skin skin
+      let  found-partner FALSE
       ask other people-here [
         if my-gender = 0 and gender = 1 [
           let new-skin get-child my-skin skin
-          if new-skin > -1[
-            ask patch-here [
-              sprout-people 1 [
-                set gender random 2
+          if new-skin > -1 [
+            set  found-partner TRUE
+            hatch 1 [
+              set gender random 2
                 set skin new-skin
                 set color get-color skin
                 set energy person-energy-start
-                set age 0
+                set age maximum-person-age
             ]
-          ]
-        set energy energy - 1
-
+            set energy energy - 0.9 * person-energy-start
+          ] ;; if new skin
+        ] ;; if my-gender
+      ] ;;ask
+      if found-partner[
+        set energy energy - 0.1 * person-energy-start
       ]
-  ]]]
+  ] ;;age
 end
 
-to cull
-  set age age + 1
-  if age > maximum-age [
-    if energy < 0.5 [die]
-  ]
-end
+
 
 to death  ;; turtle procedure
-  ;; when energy dips below zero, die
-  if energy < 0 [ die ]
+  set age age - 1
+  if energy < 0 or random age = 0 [ die ]
 end
 
 to grow-grass  ;; patch procedure
@@ -150,11 +168,22 @@ to reproduce-animal  ;; sheep procedure
     set energy (energy / 2)                ;; divide energy between parent and offspring
     hatch 1 [
        set color get-color skin
+       set age maximum-animal-age
        rt random-float 360
        fd 1
        ]   ;; hatch an offspring and move it forward 1 step
   ]
 end
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+to show-breeding-grounds
+  ask patches [
+    if get-skin-for-breeding-ground pxcor pycor > -1 [set pcolor red]
+    ]
+end
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; Section name (female)  Marries (male)  Children
 ; 0 Karimarra  1 Panaka  2 Pal.yarri
@@ -221,23 +250,6 @@ NIL
 NIL
 1
 
-BUTTON
-225
-20
-312
-53
-Go People
-go-people
-T
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-0
-
 SLIDER
 200
 70
@@ -247,7 +259,7 @@ number-of-people
 number-of-people
 0
 100
-0
+99
 1
 1
 NIL
@@ -271,18 +283,18 @@ SLIDER
 number-of-animals
 number-of-animals
 0
-100
-16
+1000
+306
 1
 1
 NIL
 HORIZONTAL
 
 PLOT
-10
-465
-890
-620
+15
+480
+895
+635
 People
 NIL
 NIL
@@ -308,7 +320,7 @@ person-energy-start
 person-energy-start
 0
 100
-49
+100
 1
 1
 NIL
@@ -323,7 +335,7 @@ person-cost-move
 person-cost-move
 0
 10
-1.5
+1
 0.5
 1
 NIL
@@ -334,38 +346,21 @@ SLIDER
 180
 372
 213
-maximum-age
-maximum-age
+maximum-person-age
+maximum-person-age
 0
 1000
-834
+478
 1
 1
 NIL
 HORIZONTAL
 
-BUTTON
-380
-15
-472
-48
-Go Animals
-go-animals
-T
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
 PLOT
-10
-295
-890
-460
+15
+310
+895
+475
 Animals
 NIL
 NIL
@@ -384,9 +379,9 @@ PENS
 
 PLOT
 15
-640
+645
 890
-790
+795
 Plants
 NIL
 NIL
@@ -409,7 +404,7 @@ grass-regrowth-time
 grass-regrowth-time
 0
 30
-17
+6
 1
 1
 NIL
@@ -424,7 +419,101 @@ animal-gain-from-food
 animal-gain-from-food
 0
 50
-17.5
+33.5
+0.5
+1
+NIL
+HORIZONTAL
+
+SLIDER
+380
+150
+552
+183
+animal-reproduce
+animal-reproduce
+1
+50
+26
+1
+1
+%
+HORIZONTAL
+
+SLIDER
+565
+110
+742
+143
+width-breeding-ground
+width-breeding-ground
+1
+16
+12
+1
+1
+NIL
+HORIZONTAL
+
+BUTTON
+530
+15
+657
+48
+Breeding Grounds
+show-breeding-grounds
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+135
+20
+198
+53
+go
+Go
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SLIDER
+190
+220
+377
+253
+human-gain-from-food
+human-gain-from-food
+0
+100
+65
+1
+1
+%
+HORIZONTAL
+
+SLIDER
+385
+190
+557
+223
+animal-speed
+animal-speed
+0
+10
+5
 0.5
 1
 NIL
@@ -432,29 +521,29 @@ HORIZONTAL
 
 SLIDER
 200
-260
+265
 372
-293
-animal-reproduce
-animal-reproduce
+298
+satiation-energy
+satiation-energy
+0
+250
+200
 1
-20
-5
 1
-1
-%
+NIL
 HORIZONTAL
 
 SLIDER
-390
-165
-567
-198
-width-breeding-ground
-width-breeding-ground
-1
-5
-4
+405
+225
+577
+258
+maximum-animal-age
+maximum-animal-age
+0
+500
+54
 1
 1
 NIL
