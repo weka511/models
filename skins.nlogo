@@ -276,9 +276,9 @@ skin-system
 0
 
 SLIDER
-380
+390
 70
-552
+562
 103
 number-of-animals
 number-of-animals
@@ -396,9 +396,9 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot count patches with [pcolor = green]"
 
 SLIDER
-560
+570
 70
-732
+742
 103
 grass-regrowth-time
 grass-regrowth-time
@@ -411,24 +411,24 @@ NIL
 HORIZONTAL
 
 SLIDER
-380
+390
 110
-552
+562
 143
 animal-gain-from-food
 animal-gain-from-food
 0
 50
-33.5
+25
 0.5
 1
 NIL
 HORIZONTAL
 
 SLIDER
-380
+390
 150
-552
+562
 183
 animal-reproduce
 animal-reproduce
@@ -441,15 +441,15 @@ animal-reproduce
 HORIZONTAL
 
 SLIDER
-565
+575
 110
-742
+752
 143
 width-breeding-ground
 width-breeding-ground
 1
 16
-12
+10
 1
 1
 NIL
@@ -490,30 +490,30 @@ NIL
 1
 
 SLIDER
-190
+200
 220
-377
+387
 253
 human-gain-from-food
 human-gain-from-food
 0
 100
-65
+64
 1
 1
 %
 HORIZONTAL
 
 SLIDER
-385
-190
-557
-223
+395
+185
+567
+218
 animal-speed
 animal-speed
 0
 10
-5
+4.5
 0.5
 1
 NIL
@@ -528,17 +528,17 @@ satiation-energy
 satiation-energy
 0
 250
-200
+250
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-405
-225
-582
-258
+390
+220
+567
+253
 animal-life-expentancy
 animal-life-expentancy
 0
@@ -548,6 +548,26 @@ animal-life-expentancy
 1
 NIL
 HORIZONTAL
+
+PLOT
+925
+660
+1540
+810
+Energy
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot sum [energy] of animals"
+"pen-1" 1.0 0 -7500403 true "" "plot sum [energy] of people"
+"pen-2" 1.0 0 -2674135 true "" "plot sum [energy] of turtles"
 
 @#$#@#$#@
 ## WHAT IS IT?
