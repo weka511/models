@@ -136,12 +136,12 @@ to-report get-number-skins
 end
 
 to  reproduce-people
-  if age > 25 and energy > 1.5 * person-energy-start [
+  if age > age-at-puberty and energy > 1.5 * person-energy-start [
       let my-gender gender
       let my-skin skin
       let  found-partner FALSE
       ask other people-here [
-        if my-gender = 0 and gender = 1 and energy > 1.5 * person-energy-start [
+        if my-gender = 0 and gender = 1 and energy > 1.5 * person-energy-start and age > age-at-puberty  [
           let new-skin get-child my-skin skin
           if new-skin > -1 [
             set  found-partner TRUE
@@ -152,12 +152,12 @@ to  reproduce-people
                 set energy person-energy-start
                 set age 0
             ]
-            set energy energy - 0.9 * person-energy-start
+            set energy energy - female-cost-reproduction * person-energy-start / 100.0
           ] ;; if new skin
         ] ;; if my-gender
       ] ;;ask
       if found-partner[
-        set energy energy - 0.1 * person-energy-start
+        set energy energy - male-cost-reproduction * person-energy-start / 100.0
       ]
   ] ;;age
 end
@@ -222,7 +222,6 @@ to-report get-skin-for-breeding-ground [x y]
   if max-pxcor >= x and max-pxcor - width-breeding-ground <= x and min-pycor <= y and min-pycor + width-breeding-ground >= y  [report 3]
   report -1
 end
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 930
@@ -252,9 +251,9 @@ ticks
 30.0
 
 BUTTON
+840
 15
-15
-79
+904
 48
 Setup
 setup
@@ -270,24 +269,24 @@ NIL
 
 SLIDER
 200
-70
+10
 372
-103
+43
 number-of-people
 number-of-people
 0
 100
-99
+98
 1
 1
 NIL
 HORIZONTAL
 
 CHOOSER
-30
-65
-167
-110
+775
+105
+912
+150
 skin-system
 skin-system
 "Martuthunira (4)"
@@ -295,9 +294,9 @@ skin-system
 
 SLIDER
 390
-70
+10
 562
-103
+43
 number-of-animals
 number-of-animals
 0
@@ -310,9 +309,9 @@ HORIZONTAL
 
 PLOT
 15
-480
+490
 895
-635
+645
 People
 NIL
 NIL
@@ -331,9 +330,9 @@ PENS
 
 SLIDER
 200
-105
+45
 372
-138
+78
 person-energy-start
 person-energy-start
 0
@@ -346,9 +345,9 @@ HORIZONTAL
 
 SLIDER
 200
-140
+80
 372
-173
+113
 person-cost-move
 person-cost-move
 0
@@ -361,9 +360,9 @@ HORIZONTAL
 
 SLIDER
 200
-180
+115
 382
-213
+148
 person-life-expentancy
 person-life-expentancy
 0
@@ -376,9 +375,9 @@ HORIZONTAL
 
 PLOT
 15
-310
+320
 895
-475
+485
 Animals
 NIL
 NIL
@@ -397,9 +396,9 @@ PENS
 
 PLOT
 15
-645
+655
 890
-795
+805
 Plants
 NIL
 NIL
@@ -415,9 +414,9 @@ PENS
 
 SLIDER
 570
-70
+10
 742
-103
+43
 grass-regrowth-time
 grass-regrowth-time
 0
@@ -430,9 +429,9 @@ HORIZONTAL
 
 SLIDER
 390
-110
+50
 562
-143
+83
 animal-gain-from-food
 animal-gain-from-food
 0
@@ -445,9 +444,9 @@ HORIZONTAL
 
 SLIDER
 390
-150
+90
 562
-183
+123
 animal-reproduce
 animal-reproduce
 1
@@ -460,9 +459,9 @@ HORIZONTAL
 
 SLIDER
 575
-110
+50
 752
-143
+83
 width-breeding-ground
 width-breeding-ground
 1
@@ -474,10 +473,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-135
-20
-198
-53
+840
+55
+903
+88
 go
 Go
 T
@@ -492,9 +491,9 @@ NIL
 
 SLIDER
 200
-220
+150
 387
-253
+183
 human-gain-from-food
 human-gain-from-food
 0
@@ -507,9 +506,9 @@ HORIZONTAL
 
 SLIDER
 395
-185
+125
 567
-218
+158
 animal-speed
 animal-speed
 0
@@ -522,14 +521,14 @@ HORIZONTAL
 
 SLIDER
 200
-265
+185
 372
-298
+218
 satiation-energy
 satiation-energy
 0
 250
-158
+156
 1
 1
 NIL
@@ -537,9 +536,9 @@ HORIZONTAL
 
 SLIDER
 390
-220
+160
 567
-253
+193
 animal-life-expentancy
 animal-life-expentancy
 0
@@ -572,14 +571,59 @@ PENS
 
 SLIDER
 400
-265
+205
 572
-298
+238
 animal-energy-start
 animal-energy-start
 0
 200
 100
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+200
+220
+392
+253
+male-cost-reproduction
+male-cost-reproduction
+0
+100
+17
+1
+1
+%
+HORIZONTAL
+
+SLIDER
+200
+255
+387
+288
+female-cost-reproduction
+female-cost-reproduction
+0
+100
+89
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+210
+290
+382
+323
+age-at-puberty
+age-at-puberty
+0
+100
+25
 1
 1
 NIL
@@ -592,12 +636,30 @@ Model the rules that some Aboriginal groups have created to preserve animals.
 
 Several years agoo I was struck by a description of the rules for conserving totem animals, which show evidence of having been designed very carefully. This model is intended as a respectful exploration of the rules, to verify my belief that they ensure stability of the population. I've created this model in the hope it will answer two questions.
 
-  * Do the marriage rules help keep the kin system stable (e.g., what hapens if there is a gross imbalance in ratios?
-  * Do the food rules ensure that the mix of species remanins stable?
+  * Do the marriage rules keep the kin system stable (e.g., what happens if there is a gross imbalance in ratios?
+  * Do the food rules ensure that the mix of species remains stable?
 
 ## HOW IT WORKS
 
-(what rules the agents use to create the overall behavior of the model)
+The model has three interacting types of agent:
+
+  * Food (patches)     Food grows, and it is eaten by animals. Some pathces are assigned to be breeding areas).
+  * Animals (turtles)  Animals gain energy from Food. If an animal has enough energy, it may reproduce, but only in a Breeding Area.
+  * People (turtles)   People gain energy by eating animals whose skin is different from their own. If people have enough energy they can reproduce, provided they find a partner (of the correct gender) whose skin is the correct one also. The offspring have the approriate skin, depending on the parents. Reproduction costs energy,
+
+People and animals both die:
+
+ * if they run out of energy, or;
+ * namdomly (the life expectancy is used to set a proabaility of death).
+
+Animals also die if they are eaten!
+
+Assumptions:
+
+ * we do not need to assume monogamy, as the extra book-keeping isn't expected to change to outcome.
+ * we can assume asexuial reproduction on the part of animals.
+ * all animals depend on a homogeneous food source.
+ * we assume that nobody evey violates the breeding grounds.
 
 ## HOW TO USE IT
 
@@ -613,7 +675,8 @@ Several years agoo I was struck by a description of the rules for conserving tot
 
 ## EXTENDING THE MODEL
 
-(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
+ * Allow kinship rules to be varied, say by loading from a CSV file.
+ * Allow kinship restrictions to be turned off to see how influential they are.
 
 ## NETLOGO FEATURES
 
@@ -621,11 +684,12 @@ Several years agoo I was struck by a description of the rules for conserving tot
 
 ## RELATED MODELS
 
-(models in the NetLogo Models Library and elsewhere which are of related interest)
+I have borrowed code from Wolf Sheep Predation
 
 ## CREDITS AND REFERENCES
 
 
+  * The model is distributed under the [GNU LESSER GENERAL PUBLIC LICENSE, Version 3, 29 June 2007](https://github.com/weka511/models/blob/master/LICENSE)
 
   * [Link to model](https://github.com/weka511/models)
 
