@@ -1,11 +1,21 @@
+; Copyright 2015 Simon Crase
+; See Info tab for full copyright and license.
 
+patches-own [
+  countdown      ;; controls regrowth
+]
 
-turtles-own [energy skin age]
-
-patches-own [countdown]
+turtles-own [
+  energy        ;; need this to live, and a higher level to reproduce
+  skin          ;; controls marriage and who can eat what
+]
 
 breed [people person]
-people-own [ gender ]
+
+people-own [
+  gender
+  age
+]
 
 breed [animals animal]
 
@@ -19,21 +29,24 @@ to setup
   reset-ticks
 end
 
+;; create animals and distribute them uniformly
+
 to setup-animals
   set-default-shape animals "cow"
   create-animals number-of-animals [
      setxy random-xcor random-ycor
      set skin random get-number-skins
      set color get-color skin
-     set energy random (20 * animal-gain-from-food)
-     set age 0
+     set energy animal-energy-start
     ]
 end
+
+;; create people in centre, so nobody will be too close to a breeding ground
 
 to setup-people
   set-default-shape people "person"
   create-people number-of-people [
-    setxy random-xcor random-ycor
+    setxy 0 0
     set gender random 2
     set skin random 4
     set color get-color skin
@@ -42,13 +55,15 @@ to setup-people
     ]
 end
 
+;; setup patches with and without food
+
 to setup-food-for-animals
-      ask patches [
-      set pcolor one-of [green brown]
-      if-else pcolor = green
-        [ set countdown grass-regrowth-time ]
-        [ set countdown random grass-regrowth-time ]
-    ]
+  ask patches [
+    set pcolor one-of [green brown]
+    if-else pcolor = green
+      [ set countdown grass-regrowth-time ]
+      [ set countdown random grass-regrowth-time ]
+  ]
 end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -56,12 +71,10 @@ end
 to go
     ask people [
       move-people
-      set energy energy - person-cost-move
-      if energy < satiation-energy [
-        catch-animal
-      ]
+      catch-animal
       death person-life-expentancy
       reproduce-people
+      set age age + 1
     ]
     ask animals [
       move-animal
@@ -74,21 +87,25 @@ to go
   tick
 end
 
+;; If energy low enough, try to catch and eat an animal.
+;; Don't eat animal if its skin matches ours!
 
 to catch-animal
-  let my-skin  skin
-  let prey one-of animals-here;; with [skin != my-skin]
-  if prey != nobody [
-    let food-energy 0
-    ask prey [
-      let skin-for-breed get-skin-for-breeding-ground xcor ycor
-      if skin-for-breed = -1 and skin != my-skin [
-        set food-energy energy
-        die
+  if energy < satiation-energy [
+    let my-skin  skin
+    let prey one-of animals-here
+    if prey != nobody [
+      let food-energy 0
+      ask prey [
+        let skin-for-breed get-skin-for-breeding-ground xcor ycor
+        if  skin != my-skin [
+          set food-energy energy
+          die
+        ]
       ]
+      set energy energy + human-gain-from-food * food-energy / 100
     ]
-    set energy energy + human-gain-from-food * food-energy / 100
- ]
+  ]
 end
 
 to move-animal
@@ -96,10 +113,18 @@ to move-animal
   fd random animal-speed
 end
 
+;; move person - but stay put if this would place us in someelse's breeding ground
+
 to move-people
+  let x0  xcor
+  let y0  ycor
   rt random 45
   fd random 10
-  set energy energy - person-cost-move
+  let breeding-skin get-skin-for-breeding-ground xcor ycor
+  if-else  breeding-skin = -1 or breeding-skin = skin
+    [set energy energy - person-cost-move]
+    [set xcor x0
+     set ycor y0]
 end
 
 to-report get-color [skin-number]
@@ -140,7 +165,6 @@ end
 
 
 to death [life-expectancy]
-  set age age + 1
   if energy < 0 or random life-expectancy = 0 [ die ]
 end
 
@@ -168,20 +192,13 @@ to reproduce-animal  ;; sheep procedure
     set energy (energy / 2)                ;; divide energy between parent and offspring
     hatch 1 [
        set color get-color skin
-       set age animal-life-expentancy
        rt random-float 360
        fd 1
        ]   ;; hatch an offspring and move it forward 1 step
   ]
 end
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-to show-breeding-grounds
-  ask patches [
-    if get-skin-for-breeding-ground pxcor pycor > -1 [set pcolor red]
-    ]
-end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -205,6 +222,7 @@ to-report get-skin-for-breeding-ground [x y]
   if max-pxcor >= x and max-pxcor - width-breeding-ground <= x and min-pycor <= y and min-pycor + width-breeding-ground >= y  [report 3]
   report -1
 end
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 930
@@ -319,7 +337,7 @@ SLIDER
 person-energy-start
 person-energy-start
 0
-100
+200
 100
 1
 1
@@ -449,28 +467,11 @@ width-breeding-ground
 width-breeding-ground
 1
 16
-10
+12
 1
 1
 NIL
 HORIZONTAL
-
-BUTTON
-530
-15
-657
-48
-Breeding Grounds
-show-breeding-grounds
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
 
 BUTTON
 135
@@ -528,7 +529,7 @@ satiation-energy
 satiation-energy
 0
 250
-250
+158
 1
 1
 NIL
@@ -568,6 +569,21 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot sum [energy] of animals"
 "pen-1" 1.0 0 -7500403 true "" "plot sum [energy] of people"
 "pen-2" 1.0 0 -2674135 true "" "plot sum [energy] of turtles"
+
+SLIDER
+400
+265
+572
+298
+animal-energy-start
+animal-energy-start
+0
+200
+100
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
