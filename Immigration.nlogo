@@ -6,7 +6,7 @@ globals [
                       ;; It ensures that we inject the second group
                       ;; of new people only once
   history             ;; A record of all sadness ratings. Used to judge that
-                      ;; we arfe unlikely to converge
+                      ;; we are unlikely to converge
 ]
 
 turtles-own [
@@ -76,7 +76,7 @@ to go
   ;; If we get here we are still running - we feel that there is some prospect of improving
   ;; happiness. Let's try moving all the sda turtles, then recalculate happiness
 
-  ask sad-turtles [pursue-happiness house-search-strategy]
+  ask sad-turtles [pursue-happiness]
   ask turtles [update-happiness]
 
   tick
@@ -123,7 +123,7 @@ to colour-turtle [ group ]
     if group = 8 [set color pink]
 end
 
-;; Update the turtles's happiness indicator,
+;; Update the turtle's happiness indicator,
 ;; and display happy or sad face
 
 to update-happiness
@@ -147,16 +147,13 @@ to-report get-vacancies
 end
 
 ;; Move to a vacant patch, in the hope that turtle will be happier there
-;; There are three strategies supported, a random move to a vacant space, move
-;; the nearest free space, move as far as possible.
 
-to pursue-happiness [strategy]
-  if strategy = "Random Jump" [move-to one-of get-vacancies]
-  if strategy = "Nearest" [move-to min-one-of get-vacancies [distance myself]]
-  if strategy = "Furthest" [move-to max-one-of get-vacancies [distance myself]]
+
+to pursue-happiness
+  move-to one-of get-vacancies
 end
 
-;; This reported is used when the city is stable, i.e. everyone is happy.
+;; This reporter is used when the city is stable, i.e. everyone is happy.
 ;; It checks to see whether we need to inject immigrants. If so it tells the
 ;; model to continue (by returning false), otherwise it returns true - i.e.
 ;; it is timne tio stop
@@ -247,7 +244,7 @@ number-of-groups
 number-of-groups
 2
 6
-2
+5
 1
 1
 NIL
@@ -313,7 +310,7 @@ SLIDER
 %-similar-wanted
 0
 100
-30
+36
 1
 1
 NIL
@@ -360,16 +357,6 @@ count turtles with [not happy?]
 1
 11
 
-CHOOSER
-10
-270
-174
-315
-house-search-strategy
-house-search-strategy
-"Random Jump" "Nearest" "Furthest"
-0
-
 SLIDER
 8
 82
@@ -379,7 +366,7 @@ n-inject-1
 n-inject-1
 0
 100
-50
+0
 1
 1
 NIL
@@ -394,7 +381,7 @@ n-inject-2
 n-inject-2
 0
 100
-100
+0
 1
 1
 NIL
@@ -424,17 +411,17 @@ This is an extension of [Uri Wilensky's Segregation Model](http://ccl.northweste
 
   * If we add more colours, does it become more difficult to achieve _happiness_? For example, if we have more colours:
     * does it take longer to achieve stability?
-    * do we get a more fragmented nighbourhood, with more segregation?
+    * do we get a more fragmented neighbourhood, with more segregation?
+
   * What is the tradeoff between _population density_ and the time to achieve happiness?
   * What happens if we inject another colour into a configuration that has stabilized? Does a small injection of "foreigners" cause a small change, or is it disruptive?
-  * Do different strategies for moving have an effect to the time to stabilize?
   * Does it make any difference if the numbers of people of each colour are different?
 
 ### Background
 
 Schelling stated: "My ultimate concern of course is segregation by color in the United States". My interest is different, as I lived Melbourne, Australia, for 25 years. Melbourne, unlike Sydney, was a free settlment from the outset. It presented a number of analogies to the dichotomy between white and black in the United States: English versus Irish, free settlers versus former convicts & their children, Protestant versus Catholics,  Anglo-Irish versus the minority of indigenous Kooris.
 
-Some Chinese had settled in the 19<sup>th</sup> century, during the Victorian Goldrush, before the adoption of the [White Australia Policy](https://en.wikipedia.org/wiki/White_Australia_policy). As this policy was eroded and abolished during the 20th century, various groups of [New Australians](http://slwa.wa.gov.au/wepon/settlement/html/new_australians.html) were welcomed: Greeks and Italians after the 2nd World War, Vietnamese following the fall of Saigon, Lebanese, and, more recently, Somalis and other Africans. Each group tended to occupy its own areas at first. When I arrived in Melbourne in 1990, the suburb where I first lived, Flemington, was changing from largely Italian to Vietnamese. The Vietnamese are now largely accepted: their children & grandchildren speak with Aussie accents, and the Somalis and other Muslims are the newcomers.
+Some Chinese had settled in the 19<sup>th</sup> century, during the Victorian Goldrush, before the adoption of the [White Australia Policy](https://en.wikipedia.org/wiki/White_Australia_policy). As this policy was eroded and abolished during the 20th century, various groups of [New Australians](http://slwa.wa.gov.au/wepon/settlement/html/new_australians.html) were welcomed: [Greeks and Italians after the 2nd World War](https://en.wikipedia.org/wiki/Snowy_Mountains_Scheme), Vietnamese following the fall of Saigon, Lebanese, and, more recently, Somalis and other Africans. Each group tended to occupy its own areas at first. When I arrived in Melbourne in 1990, the suburb where I first lived, Flemington, was changing from largely Italian to Vietnamese. The Vietnamese are now generally accepted: their children & grandchildren speak with Aussie accents, and the Somalis and other Muslims are the newcomers.
 
 I am fascinated by the patchwork of communities in Melbourne: the Orthodox Jewish neighbourhoods, which allow people to walk to the Synagogue without breaking the ban on working on the Sabbath; the [Jewish cakeshops of Acland Street](https://www.timeout.com/melbourne/restaurants/acland-street-cake-crawl) (to the South), and the popular [Italian restaurants of Lygon Street](http://www.goodfood.com.au/eat-out/melbournes-little-italy-a-guide-to-lygon-street-20140418-36x10), in the inner North; [Melbourne's Chinatown](http://www.thatsmelbourne.com.au/Placestogo/Precincts_Neighbourhoods/Chinatown/Pages/Chinatown.aspx) in the central City; the big Vietnamese communities to the East & West of the City; the grouping of Indian familes, which makes it practicable to have Indian Supermarkets, and for the children to study classical dance and music. This led me to wonder how well the model works for more than two groups, and what happens to later immigrants.
 
@@ -443,24 +430,17 @@ I am fascinated by the patchwork of communities in Melbourne: the Orthodox Jewis
 ###Agent Selection
 
 
-  * Turtles
-
-    * There is only one type of active agent, a turtle representing a person
-
-
-  * Patches
-
-    * Patches are essentially passive; a patch is either occupied by or person, or it is vacant.
+  * There is only one type of active agent, a _turtle_ representing a person
+  * _Patches_ are essentially passive; a patch is either occupied by one person, or it is vacant.
 
 
 ###Agent Properties
 
-
   * Turtles
 
-    * color - a built in property, which denotes the group (e.g. ethnicity) that this turtle belongs to.
+    * _color_ - a built in property, which denotes the group (e.g. ethnicity) that this turtle belongs to.
 
-    * happy? - a turtle is happy if "enough" of its neighbours are of the same group. "Enough" means that the percentage of neighbours belonging to the same group is at least _%-similar-wanted_ (see list if inputs below).
+    * _happy?_ - a turtle is happy if "enough" of its neighbours are of the same group. "Enough" means that the percentage of neighbours belonging to the same group is at least _%-similar-wanted_ (see list if inputs below).
 
 
   * Patches
@@ -470,30 +450,32 @@ I am fascinated by the patchwork of communities in Melbourne: the Orthodox Jewis
 
 ###Agent Actions
 
-  * Ordinarily turtles who are not happy (not enough neighbours from their group) move to an unoccupied patch. Since we want to know whether the atrategy for moving affects the time to stabilize, we allow three strategies: move at random (as in Schelling), move to neearest unoccupied pathc, move to furthes unoccupied.
+  * Ordinarily turtles who are not happy (not enough neighbours from their group) move to an unoccupied patch selected at random. I experimented with deterministc strategies (e.g. nearest unoccupied), but these tended to trap a turtle in a cycle of repeated failure, so I discarded them.
+  * There can be up to two waves of immigration once all turtles are happy (this is selected by the user). If immigration is has been specified, patches sprout additional turtles. Each wave of immigrants is from a separate group, which cannot match a group that is already in place. I have established that immigrants tend to form ghettoes.
 
-  * There can be up to two waves of immigration once all turtles are happy (this is selected by the user). If immigration is needed, patches sprout additional turtles. Each wave of immigrants is from a separte group, which cannot match a group that is already in place.
+###Envionment
+
+Just a 2D area, representing a city: since it is a square patch, maybe the city started as a [Roman castra](https://en.wikipedia.org/wiki/Castra)!
 
 ## HOW TO USE IT
 
-(how to use the model, including a description of each of the items in the Interface tab)
-
 ### Inputs
-  * _density_
-  * _inject-others-1?_
-  * _number-of-groups_
-  * _inject-others-1?_
-  * _n-inject_1
- 	* _n-inject_2
-  * _%-similar-wanted_
-  * _house-search-strategy_  Used to decide what a turtle will do if it is not happy:
-    * _Random Jump_  Move to an unoccupied position chosen at random
-    * _Nearest_      Move to the nearest unocccupied position
-    * _Furthest_     Move to the furthest unocccupied position
+  * _density_ of people living in the City
+  * _number-of-groups_ of people living in the City
+  * _n-inject-1_ Once the population stabilizes (i.e. everybody is happy), inject this many immigrants to the existing population.
+    * The immigrants will form a separate group
+    * The immigrants are not counted in the _density_
+  * _n-inject-2_ This works similarly to _n-inject-1_. It injects a 2nd wave of immigrnats after the first has stabilized.
+  * _n-history-stop_ This is used to terminate a run if happness is not improving.
+    * If there has been no immigration, and the number of ticks exceeds _n-history-stop_, terminate the run if current happiness falls below the average of since the simulation started.
+    * If there has been any immigration events, the "history" is reset. The models now looks at happiness since the latest immigration event.
+  * _%-similar-wanted_ A turtle is happy if "enough" of its neighbours are the same colour. "Enough" means that the percentage of similar neighbours to total numbers is at least _%-similar-wanted_. E.g., if a turtle has the full number of neighbours, 8, _%-similar-wanted_ of 25 means that two or more nighbouts are similar.
 
 ### Outputs
 
-
+  * Plot showing overall happiness, and sadness, as a fraction of all turtles. So if everybody is happy, happiness = 1.0 and sadness = 0.0.
+  * Total number of happy turtles
+  * Total number of sad turtles
 
 ## THINGS TO NOTICE
 
@@ -517,6 +499,7 @@ I am fascinated by the patchwork of communities in Melbourne: the Orthodox Jewis
 
 ## CREDITS AND REFERENCES
 
+  * Latest version of [this model](https://github.com/weka511/models/blob/master/Immigration.nlogo)
   * [Uri Wilensky's Segregation Model](http://ccl.northwestern.edu/netlogo/models/Segregation)
   * [Models of Segregation Thomas Schelling](http://isites.harvard.edu/fs/docs/icb.topic185351.files/shelling1.pdf)
   * [Dynamic Models of Segregation Thomas Schelling] (http://wayback.archive.org/web/20140801170215/http://www.stat.berkeley.edu/~aldous/157/Papers/Schelling_Seg_Models.pdf)
