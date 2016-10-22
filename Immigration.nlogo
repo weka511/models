@@ -415,7 +415,7 @@ This is an extension of [Uri Wilensky's Segregation Model](http://ccl.northweste
 
   * What is the tradeoff between _population density_ and the time to achieve happiness?
   * What happens if we inject another colour into a configuration that has stabilized? Does a small injection of "foreigners" cause a small change, or is it disruptive?
-  * Does it make any difference if the numbers of people of each colour are different?
+  * Does it make any difference if the numbers of people of each colour are different? (Not in scope of this model)
 
 ### Background
 
@@ -514,6 +514,8 @@ Notice that _%-similar-wanted_ can be **changed while a simulation is in progres
   * A _Trump_ button, which would build a wall, so happiness would be based on neighbours on one's own side of the wall. This need not cross the entire model. NB - there are cities with barriers: in Melbourne there is the Yarra River, and major arterial highways. People might never meet the folk on the other side of a river or 10 lane freeway.
 
   * An _assimilate_ feature would allow two groups to accept one another.
+
+  * Modify user interface to allow propertion of people of each colour to vary. This might be a slider which sets the variance of numbers: zero gives equal proportions, otherwise generate random counts that match target variance.
 
 ## NETLOGO FEATURES
 
