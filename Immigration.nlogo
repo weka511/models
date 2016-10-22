@@ -41,7 +41,7 @@ to setup
 
   ask patches[
     set pcolor gray
-    if random 100 < density [ populate-patch number-of-groups]
+    if random 100 < density-% [ populate-patch number-of-groups]
   ]
 
   ;; Find out which turtles are happy
@@ -225,11 +225,11 @@ SLIDER
 10
 176
 43
-density
-density
+density-%
+density-%
 0
 100
-73
+75
 1
 1
 NIL
@@ -244,7 +244,7 @@ number-of-groups
 number-of-groups
 2
 6
-5
+4
 1
 1
 NIL
@@ -310,7 +310,7 @@ SLIDER
 %-similar-wanted
 0
 100
-36
+8
 1
 1
 NIL
@@ -366,7 +366,7 @@ n-inject-1
 n-inject-1
 0
 100
-0
+45
 1
 1
 NIL
@@ -407,7 +407,7 @@ HORIZONTAL
 
 ### Scope of Model
 
-This is an extension of [Uri Wilensky's Segregation Model](http://ccl.northwestern.edu/netlogo/models/Segregation), which was based on [Thomas Schelling's Model of Segregation](http://isites.harvard.edu/fs/docs/icb.topic185351.files/shelling1.pdf). Schelling' model is very fertile: it gaives rise to further questions, including the ones that follow.
+This is an extension of [Uri Wilensky's Segregation Model](http://ccl.northwestern.edu/netlogo/models/Segregation), which was based on [Thomas Schelling's Model of Segregation](http://isites.harvard.edu/fs/docs/icb.topic185351.files/shelling1.pdf). Schelling's model is quite fertile: it gives rise to further questions, including the ones that follow.
 
   * If we add more colours, does it become more difficult to achieve _happiness_? For example, if we have more colours:
     * does it take longer to achieve stability?
@@ -453,6 +453,20 @@ I am fascinated by the patchwork of communities in Melbourne: the Orthodox Jewis
   * Ordinarily turtles who are not happy (not enough neighbours from their group) move to an unoccupied patch selected at random. I experimented with deterministc strategies (e.g. nearest unoccupied), but these tended to trap a turtle in a cycle of repeated failure, so I discarded them.
   * There can be up to two waves of immigration once all turtles are happy (this is selected by the user). If immigration is has been specified, patches sprout additional turtles. Each wave of immigrants is from a separate group, which cannot match a group that is already in place. I have established that immigrants tend to form ghettoes.
 
+###Order of Events
+
+#### Setup
+  * Initialize Globals. There are a few things needed to make the model work smoothly. The _history_, which is used to stop the simulation once it is clear that no progress has been made, or is likely to be made, is set to empty. And there are some variables that make sure that immogration works smoothly.
+  * Initialize patches. All patches are set to grey, and some of them are populated. This is doubly random: the colours (groups) are random, and the decision whther or not to poulate is also random - so the probabilty of a patch being populated is _density-%_/100.
+
+#### Go/Go Once
+
+These buttons work in the standard way: _Go Once_ runs through one step of the simulation, _Go_ repeats this until the simulation is done.
+
+  * Either everyone is happy
+  * Or we have many successive trials without happiness moving forward by enough to conclude that the population will ever settle down. We check by comparing happiness with the average in the past.
+
+
 ###Envionment
 
 Just a 2D area, representing a city: since it is a square patch, maybe the city started as a [Roman castra](https://en.wikipedia.org/wiki/Castra)!
@@ -460,7 +474,7 @@ Just a 2D area, representing a city: since it is a square patch, maybe the city 
 ## HOW TO USE IT
 
 ### Inputs
-  * _density_ of people living in the City
+  * _density-%_ of people living in the City
   * _number-of-groups_ of people living in the City
   * _n-inject-1_ Once the population stabilizes (i.e. everybody is happy), inject this many immigrants to the existing population.
     * The immigrants will form a separate group
@@ -469,29 +483,41 @@ Just a 2D area, representing a city: since it is a square patch, maybe the city 
   * _n-history-stop_ This is used to terminate a run if happness is not improving.
     * If there has been no immigration, and the number of ticks exceeds _n-history-stop_, terminate the run if current happiness falls below the average of since the simulation started.
     * If there has been any immigration events, the "history" is reset. The models now looks at happiness since the latest immigration event.
-  * _%-similar-wanted_ A turtle is happy if "enough" of its neighbours are the same colour. "Enough" means that the percentage of similar neighbours to total numbers is at least _%-similar-wanted_. E.g., if a turtle has the full number of neighbours, 8, _%-similar-wanted_ of 25 means that two or more nighbouts are similar.
+  * _%-similar-wanted_ A turtle is happy if "enough" of its neighbours are the same colour. "Enough" means that the percentage of similar neighbours to total numbers is at least _%-similar-wanted_. E.g., if a turtle has the full number of neighbours, 8, _%-similar-wanted_ of 25 means that two or more neighbours are similar.
+
+### Using Model
+
+Set all sliders to values that you wish to use. Press the _Setup_ button to create the City. _Go Once_ will allow you to perform one cycle of moving people to try to improve happiness. _Go_ will make the program carry out enough cycles to either make everyone happy, or conclude that happiness is unreachable.
+
+Notice that _%-similar-wanted_ can be **changed while a simulation is in progress**. For example, if it appears that people aren't going to achieve happiness, you can reduce _%-similar-wanted_; this lowers everyone's exclusivity, and allows them to tolerate more diversity and become happier. If you slowly nudge this value down, you may find a threshhold where happiness is achievable. For example, with 5 colours, and a density of 73, it seems that total happiness is unachiveable with _%-similar-wanted_ of 51, but it can be attained in under 100 steps with _%-similar-wanted_ = 50!
+
 
 ### Outputs
-
+  * "The World" consists of a 2D display. Each group is a separate colour. Happy turtles smile, sad ones look glum.
   * Plot showing overall happiness, and sadness, as a fraction of all turtles. So if everybody is happy, happiness = 1.0 and sadness = 0.0.
   * Total number of happy turtles
   * Total number of sad turtles
 
-## THINGS TO NOTICE
+## THINGS TO NOTICE & THINGS TO TRY
 
-(suggested things for the user to notice while running the model)
+  * Tradeoff between _number-of-groups_ and _%-similar-wanted_
+    * Setup the program with two groups, _%-similar-wanted_ of 75, _%-similar-wanted_ = 75. Press Go, and wait until everybody is happy.  Record the number of ticks.
+    * Now increase the number of groups, Setup and Go again. Does the simulation converge to general happiness? If not, try nudging the _%-similar-wanted_ slider down slowly, and see if you can find a value where happiness starts improving, and eventually reaches 100.
+    * Will this work it you start again with 4 groups, or do you have to nudge _%-similar-wanted_ down further?
 
-## THINGS TO TRY
+  * Immigration
+    * Try adding a few immigrants with _n-inject-1_. If _%-similar-wanted_ and _%-similar-wanted_ are low enough for the simulation to settle, do the immigrants for a few ghettos?
 
-(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
 
 ## EXTENDING THE MODEL
 
-(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
+  * A _Trump_ button, which would build a wall, so happiness would be based on neighbours on one's own side of the wall. This need not cross the entire model. NB - there are cities with barriers: in Melbourne there is the Yarra River, and major arterial highways. People might never meet the folk on the other side of a river or 10 lane freeway.
+
+  * An _assimilate_ feature would allow two groups to accept one another.
 
 ## NETLOGO FEATURES
 
-(interesting or unusual features of NetLogo that the model uses, particularly in the Code tab; or where workarounds were needed for missing features)
+No exciting Netlogo features were used: this is a pretty bland model.
 
 ## RELATED MODELS
 
