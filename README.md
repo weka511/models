@@ -1,6 +1,10 @@
 # Models
 Netlogo models inspired by Scott Page's course [Model Thinking](https://www.coursera.org/course/modelthinking) and by Bill Rand's [Introduction to Agent-Based Modeling](https://www.complexityexplorer.org/courses/23-introduction-to-agent-based-modeling).
- * skins
+
+File|Description
+------------|------------------------------------------------------------------
+schelling.py|Schelling Segregation model in mesa
+skins.nlogo|Model the rules that some Aboriginal groups have created to preserve animals.
 
 ## skins
 
