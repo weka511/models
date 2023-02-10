@@ -54,14 +54,17 @@ class Blue(Person):
 class SchellingModel(Model):
 
     def __init__(self,
-                 width  = 10,
-                 height = 10,
-                 nRed   = 75,
-                 nBlue  = 10,
-                 limit  = 0.25):
+                 width  = 100,
+                 height = 100,
+                 nRed   = 7000,
+                 nBlue  = 2000,
+                 limit  = 0.25,
+                 moore  = True):
         self.schedule = RandomActivation(self)
         self.grid     = MultiGrid(width, height, True)
         self.limit    = limit
+        self.moore    = moore
+
         for i in range(nRed):
             self.place(Red(i, self))
         for i in range(nBlue):
@@ -90,7 +93,7 @@ class SchellingModel(Model):
 
     def move(self,person):
         pos = self.find_candidate(person)
-        print (f'Move {person} to {pos}')
+        # print (f'Move {person} to {pos}')
         if pos!=None:
             self.empty.remove(pos)
             self.empty.append(person.pos)
@@ -105,7 +108,7 @@ class SchellingModel(Model):
     def count_neighbours(self,person,pos):
         n_like_me   = 0
         n_different = 0
-        for neighbour in self.grid.iter_neighbors(pos, False):
+        for neighbour in self.grid.iter_neighbors(pos, self.moore):
             if neighbour.get_indicator()==person.get_indicator():
                 n_like_me += 1
             else:
