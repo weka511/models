@@ -2,7 +2,8 @@
 
 
 '''
-Schelling Segregation model in mesa --  https://mesa.readthedocs.io/en/stable/tutorials/intro_tutorial.html
+Agent Based model for Dynamic Models of Segregation, Thomas Schelling, https://search.iczhiku.com/paper/xfVfSs6TUWsnl2Kl.pdf,
+implemented in mesa --  https://mesa.readthedocs.io/en/stable/tutorials/intro_tutorial.html
 '''
 
 from abc               import abstractmethod
@@ -14,7 +15,9 @@ from mesa.time         import RandomActivation
 from numpy             import zeros
 
 class Person(Agent):
-
+    '''
+    Represents a person who occupies a location in the Model
+    '''
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
 
@@ -24,9 +27,15 @@ class Person(Agent):
 
     @abstractmethod
     def get_indicator(self):
+        '''
+        Indicates which group person belongs to
+        '''
         ...
 
     def step(self):
+        '''
+        Each step, move peron if not happy here
+        '''
         if not self.is_happy():
             self.model.move(self)
 
@@ -38,6 +47,9 @@ class Person(Agent):
         return n_like_me >= self.model.threshold * (n_like_me+n_different)
 
     def count_neighbours(self):
+        '''
+        Take census of neighbours: how many are like me?
+        '''
         return self.model.count_neighbours(self,self.pos)
 
     def __str__(self):
@@ -59,6 +71,9 @@ class Blue(Person):
 
 class SchellingModel(Model):
 
+    '''
+    Agent Based model for  Dynamic Models of Segregation, Thomas Schelling, https://search.iczhiku.com/paper/xfVfSs6TUWsnl2Kl.pdf
+    '''
     def __init__(self,
                  width     = 100,
                  height    = 100,
@@ -80,10 +95,16 @@ class SchellingModel(Model):
         self.happiness = [self.get_happiness()]
 
     def __str__(self):
+        '''
+        Used to generate title for plots
+        '''
         return f'Width={self.grid.width}, height={self.grid.height}, nRed={self.nRed}, nBlue={self.nBlue}, '\
                f'threshold={self.threshold:.3f} using {"Moore" if self.moore else "von Neumann"} neighbourhoods'
 
     def place(self,person):
+        '''
+        Place a person in a randomly selected empty location on the grid
+        '''
         x = self.random.randrange(self.grid.width)
         y = self.random.randrange(self.grid.height)
         while len(self.grid.get_cell_list_contents((x,y)))>0:
@@ -93,6 +114,9 @@ class SchellingModel(Model):
         self.schedule.add(person)
 
     def step(self):
+        '''
+        Take one step of model, and update heppness scores
+        '''
         self.schedule.step()
         self.happiness.append(self.get_happiness())
 
@@ -105,20 +129,30 @@ class SchellingModel(Model):
         return agent_counts
 
     def move(self,person):
-        pos = self.find_candidate(person)
-        # print (f'Move {person} to {pos}')
+        '''
+        Move a person to an empty location
+        '''
+        pos = self.find_empty_location(person)
         if pos!=None:
+            n = len(self.empty)
             self.empty.remove(pos)
             self.empty.append(person.pos)
+            assert n== len(self.empty)
             self.grid.move_agent(person, pos)
 
-    def find_candidate(self,person):
+    def find_empty_location(self,person):
+        '''
+        Search empty locations looking for somewhere to move to
+        '''
         for pos in self.empty:
             n_like_me, n_different = self.count_neighbours(person,pos)
             if n_like_me>self.threshold *(n_like_me+n_different):
                 return pos
 
     def count_neighbours(self,person,pos):
+        '''
+        Take census of neighbours to determine how many are like me
+        '''
         n_like_me   = 0
         n_different = 0
         for neighbour in self.grid.iter_neighbors(pos, self.moore):
@@ -130,6 +164,9 @@ class SchellingModel(Model):
         return n_like_me, n_different
 
     def get_happiness(self):
+        '''
+        Calculate total happiness of all people
+        '''
         def get_cell_content(cell):
             cell_content, _,_ = cell
             return cell_content
@@ -153,7 +190,6 @@ if __name__ == '__main__':
                 nBlue     = int(args.width*args.height*args.proportions[1]),
                 threshold = args.threshold,
                 moore     = args.neighbourhood=='moore')
-
 
     for _ in range(args.N):
         model.step()
