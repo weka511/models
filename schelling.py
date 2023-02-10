@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
-# https://mesa.readthedocs.io/en/stable/tutorials/intro_tutorial.html
 
 '''
-Schelling Segregation model in mesa
+Schelling Segregation model in mesa --  https://mesa.readthedocs.io/en/stable/tutorials/intro_tutorial.html
 '''
 
 from abc               import abstractmethod
-from matplotlib.pyplot import colorbar, figure, imshow, show
+from argparse          import ArgumentParser
+from matplotlib.pyplot import figure, show
 from mesa              import Agent, Model
 from mesa.space        import MultiGrid
 from mesa.time         import RandomActivation
@@ -27,9 +27,15 @@ class Person(Agent):
         ...
 
     def step(self):
-        n_like_me, n_different = self.count_neighbours()
-        if n_like_me==0 or n_like_me/(n_like_me+n_different)<self.model.limit:
+        if not self.is_happy():
             self.model.move(self)
+
+    def is_happy(self):
+        '''
+        Calculate happiness: a person is happy if the number of neighbors who are like them exceeds a threshold.
+        '''
+        n_like_me, n_different = self.count_neighbours()
+        return n_like_me >= self.model.threshold * (n_like_me+n_different)
 
     def count_neighbours(self):
         return self.model.count_neighbours(self,self.pos)
@@ -54,22 +60,28 @@ class Blue(Person):
 class SchellingModel(Model):
 
     def __init__(self,
-                 width  = 100,
-                 height = 100,
-                 nRed   = 7000,
-                 nBlue  = 2000,
-                 limit  = 0.25,
-                 moore  = True):
-        self.schedule = RandomActivation(self)
-        self.grid     = MultiGrid(width, height, True)
-        self.limit    = limit
-        self.moore    = moore
-
+                 width     = 100,
+                 height    = 100,
+                 nRed      = 7400,
+                 nBlue     = 2400,
+                 threshold = 0.25,
+                 moore     = True):
+        self.schedule  = RandomActivation(self)
+        self.grid      = MultiGrid(width, height, True)
+        self.threshold = threshold
+        self.moore     = moore
+        self.nRed      = nRed
+        self.nBlue     = nBlue
         for i in range(nRed):
             self.place(Red(i, self))
         for i in range(nBlue):
             self.place(Blue(i+nRed, self))
-        self.empty = [(x,y) for x in range(width) for y in range(height) if len(self.grid.get_cell_list_contents((x,y)))==0]
+        self.empty     = [(x,y) for x in range(width) for y in range(height) if len(self.grid.get_cell_list_contents((x,y)))==0]
+        self.happiness = [self.get_happiness()]
+
+    def __str__(self):
+        return f'Width={self.grid.width}, height={self.grid.height}, nRed={self.nRed}, nBlue={self.nBlue}, '\
+               f'threshold={self.threshold:.3f} using {"Moore" if self.moore else "von Neumann"} neighbourhoods'
 
     def place(self,person):
         x = self.random.randrange(self.grid.width)
@@ -82,6 +94,7 @@ class SchellingModel(Model):
 
     def step(self):
         self.schedule.step()
+        self.happiness.append(self.get_happiness())
 
     def get_counts(self):
         agent_counts = zeros((self.grid.width, self.grid.height))
@@ -102,7 +115,7 @@ class SchellingModel(Model):
     def find_candidate(self,person):
         for pos in self.empty:
             n_like_me, n_different = self.count_neighbours(person,pos)
-            if n_like_me>self.limit *(n_like_me+n_different):
+            if n_like_me>self.threshold *(n_like_me+n_different):
                 return pos
 
     def count_neighbours(self,person,pos):
@@ -116,17 +129,41 @@ class SchellingModel(Model):
 
         return n_like_me, n_different
 
+    def get_happiness(self):
+        def get_cell_content(cell):
+            cell_content, _,_ = cell
+            return cell_content
+
+        return sum([1 for cell in self.grid.coord_iter() for person in get_cell_content(cell) if person.is_happy()])
+
 if __name__ == '__main__':
-    model = SchellingModel()
+    parser = ArgumentParser(__doc__)
+    parser.add_argument('--width',         type=int,                           default = 100)
+    parser.add_argument('--height',        type=int,                           default = 100)
+    parser.add_argument('--proportions',   type=float, nargs=2,                default = [0.7, 0.2])
+    parser.add_argument('--threshold',     type=float,                         default = 1.0/3.0)
+    parser.add_argument('--neighbourhood', type=str, choices=['moore', 'von'], default = 'moore')
+    parser.add_argument('--N',             type=int,                           default= 25)
+    args = parser.parse_args()
 
-    figure()
-    imshow(model.get_counts(), interpolation="nearest")
-    colorbar()
+    model = SchellingModel(
+                width     = args.width,
+                height    = args.height,
+                nRed      = int(args.width*args.height*args.proportions[0]),
+                nBlue     = int(args.width*args.height*args.proportions[1]),
+                threshold = args.threshold,
+                moore     = args.neighbourhood=='moore')
 
-    for i in range(25):
+
+    for _ in range(args.N):
         model.step()
-    figure()
-    imshow(model.get_counts(), interpolation="nearest")
-    colorbar()
+        if model.happiness[-1]<=model.happiness[-2]:break
 
+    fig = figure(figsize=(10,10))
+    fig.suptitle(f'{model}')
+    ax1 = fig.add_subplot(2,1,1)
+    ax1.imshow(model.get_counts(), interpolation="nearest")
+    ax2 = fig.add_subplot(2,1,2)
+    ax2.plot(range(len(model.happiness)),model.happiness)
+    ax2.set_ylabel('Happiness')
     show()
