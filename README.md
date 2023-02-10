@@ -4,6 +4,7 @@ Netlogo models inspired by Scott Page's course [Model Thinking](https://www.cour
 File|Description
 ----------------|------------------------------------------------------------------
 El Farol.nlogo|El Farol bar problem
+Immigration.nlogo|This is an extension of Uri Wilensky’s Segregation Model, which was based on Thomas Schelling’s Model of Segregation. 
 schelling.py|Schelling Segregation model in mesa
 skins.nlogo|Model the rules that some Aboriginal groups have created to preserve animals.
 
