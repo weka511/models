@@ -14,6 +14,7 @@ from mesa.space        import MultiGrid
 from mesa.time         import RandomActivation
 from numpy             import array, int8, zeros
 from os.path           import join
+from random            import shuffle
 
 class Person(Agent):
     '''
@@ -116,7 +117,7 @@ class SchellingModel(Model):
 
     def step(self):
         '''
-        Take one step of model, and update heppness scores
+        Take one step of model, and update happiness scores
         '''
         self.schedule.step()
         self.happiness.append(self.get_happiness())
@@ -145,6 +146,7 @@ class SchellingModel(Model):
         '''
         Search empty locations looking for somewhere to move to
         '''
+        shuffle(self.empty)
         for pos in self.empty:
             n_like_me, n_different = self.count_neighbours(person,pos)
             if n_like_me>self.threshold *(n_like_me+n_different):
