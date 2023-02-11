@@ -13,6 +13,7 @@ from mesa              import Agent, Model
 from mesa.space        import MultiGrid
 from mesa.time         import RandomActivation
 from numpy             import array, int8, zeros
+from os.path           import join
 
 class Person(Agent):
     '''
@@ -174,16 +175,20 @@ class SchellingModel(Model):
         return sum([1 for cell in self.grid.coord_iter() for person in get_cell_content(cell) if person.is_happy()])
 
 if __name__ == '__main__':
-    Palette = array([[255,   255,   255],
+    Palette = array([[255, 255, 255],
                      [255,   0,   0],
                      [  0,   0, 255]])
+
     parser = ArgumentParser(__doc__)
     parser.add_argument('--width',         type=int,                           default = 100)
     parser.add_argument('--height',        type=int,                           default = 100)
     parser.add_argument('--proportions',   type=float, nargs=2,                default = [0.7, 0.2])
     parser.add_argument('--threshold',     type=float,                         default = 1.0/3.0)
     parser.add_argument('--neighbourhood', type=str, choices=['moore', 'von'], default = 'moore')
-    parser.add_argument('--N',             type=int,                           default= 25)
+    parser.add_argument('--N',             type=int,                           default = 25)
+    parser.add_argument('--figs',                                              default = './figs')
+    parser.add_argument('--name',                                              default = 'schelling')
+    parser.add_argument('--show',          action = 'store_true',              default = False)
     args = parser.parse_args()
 
     model = SchellingModel(
@@ -206,4 +211,7 @@ if __name__ == '__main__':
     ax2 = fig.add_subplot(2,1,2)
     ax2.plot(range(len(model.happiness)),model.happiness)
     ax2.set_ylabel('Happiness')
-    show()
+
+    fig.savefig(join(args.figs,args.name))
+    if args.show:
+        show()
