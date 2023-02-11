@@ -12,7 +12,7 @@ from matplotlib.pyplot import figure, show
 from mesa              import Agent, Model
 from mesa.space        import MultiGrid
 from mesa.time         import RandomActivation
-from numpy             import zeros
+from numpy             import array, int8, zeros
 
 class Person(Agent):
     '''
@@ -99,7 +99,7 @@ class SchellingModel(Model):
         Used to generate title for plots
         '''
         return f'Width={self.grid.width}, height={self.grid.height}, nRed={self.nRed}, nBlue={self.nBlue}, '\
-               f'threshold={self.threshold:.3f} using {"Moore" if self.moore else "von Neumann"} neighbourhoods'
+               f'threshold={self.threshold:.3f}, using {"Moore" if self.moore else "von Neumann"} neighbourhoods'
 
     def place(self,person):
         '''
@@ -121,7 +121,7 @@ class SchellingModel(Model):
         self.happiness.append(self.get_happiness())
 
     def get_counts(self):
-        agent_counts = zeros((self.grid.width, self.grid.height))
+        agent_counts = zeros((self.grid.width, self.grid.height),dtype=int8)
         for cell in self.grid.coord_iter():
             cell_content, x, y = cell
             for person in cell_content:
@@ -174,6 +174,9 @@ class SchellingModel(Model):
         return sum([1 for cell in self.grid.coord_iter() for person in get_cell_content(cell) if person.is_happy()])
 
 if __name__ == '__main__':
+    Palette = array([[255,   255,   255],
+                     [255,   0,   0],
+                     [  0,   0, 255]])
     parser = ArgumentParser(__doc__)
     parser.add_argument('--width',         type=int,                           default = 100)
     parser.add_argument('--height',        type=int,                           default = 100)
@@ -198,7 +201,8 @@ if __name__ == '__main__':
     fig = figure(figsize=(10,10))
     fig.suptitle(f'{model}')
     ax1 = fig.add_subplot(2,1,1)
-    ax1.imshow(model.get_counts(), interpolation="nearest")
+
+    ax1.imshow(Palette[model.get_counts()], interpolation="nearest")
     ax2 = fig.add_subplot(2,1,2)
     ax2.plot(range(len(model.happiness)),model.happiness)
     ax2.set_ylabel('Happiness')
