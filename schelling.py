@@ -16,6 +16,8 @@ from numpy             import array, int8, zeros
 from os.path           import join
 from random            import shuffle
 
+
+
 class Person(Agent):
     '''
     Represents a person who occupies a location in the Model
@@ -46,7 +48,8 @@ class Person(Agent):
         Calculate happiness: a person is happy if the number of neighbors who are like them exceeds a threshold.
         '''
         n_like_me, n_different = self.count_neighbours()
-        return n_like_me >= self.model.threshold * (n_like_me+n_different)
+        return self.model.is_happy(n_like_me,n_different)
+        # return n_like_me >= self.model.threshold * (n_like_me+n_different)
 
     def count_neighbours(self):
         '''
@@ -100,7 +103,8 @@ class SchellingModel(Model):
         '''
         Used to generate title for plots
         '''
-        return f'Width={self.grid.width}, height={self.grid.height}, nRed={self.nRed}, nBlue={self.nBlue}, '\
+        return f'{self.nRed} Red + {self.nBlue} Blue, '                                                          \
+               f'density={(self.nRed + self.nBlue)/(self.grid.width*self.grid.height):.3f}, '                    \
                f'threshold={self.threshold:.3f}, using {"Moore" if self.moore else "von Neumann"} neighbourhoods'
 
     def place(self,person):
@@ -149,8 +153,14 @@ class SchellingModel(Model):
         shuffle(self.empty)
         for pos in self.empty:
             n_like_me, n_different = self.count_neighbours(person,pos)
-            if n_like_me>self.threshold *(n_like_me+n_different):
+            if self.is_happy(n_like_me,n_different):
                 return pos
+
+    def is_happy(self,n_like_me,n_different):
+        '''
+        Calculate happiness: a person is happy if the number of neighbors who are like them exceeds a threshold.
+        '''
+        return n_like_me >= self.threshold * (n_like_me+n_different)
 
     def count_neighbours(self,person,pos):
         '''
@@ -208,7 +218,6 @@ if __name__ == '__main__':
     fig = figure(figsize=(10,10))
     fig.suptitle(f'{model}')
     ax1 = fig.add_subplot(2,1,1)
-
     ax1.imshow(Palette[model.get_counts()], interpolation="nearest")
     ax2 = fig.add_subplot(2,1,2)
     ax2.plot(range(len(model.happiness)),model.happiness)
