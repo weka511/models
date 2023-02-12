@@ -9,7 +9,7 @@ implemented in mesa --  https://mesa.readthedocs.io/en/stable/tutorials/intro_tu
 from abc               import abstractmethod
 from argparse          import ArgumentParser
 from matplotlib.pyplot import figure, show
-from mesa              import Agent, Model
+from mesa              import Agent, DataCollector, Model
 from mesa.space        import MultiGrid
 from mesa.time         import RandomActivation
 from numpy             import array, count_nonzero, int8, sum, zeros
@@ -99,6 +99,7 @@ class SchellingModel(Model):
             self.place(Blue(i+nRed, self))
         self.empty     = [(x,y) for x in range(width) for y in range(height) if len(self.grid.get_cell_list_contents((x,y)))==0]
 
+
     def __str__(self):
         '''
         Used to generate title for plots
@@ -124,6 +125,7 @@ class SchellingModel(Model):
         '''
         Take one step of model, and update happiness scores
         '''
+        self.datacollector.collect(self)
         self.schedule.step()
 
     def get_counts(self):
@@ -187,6 +189,8 @@ class SchellingModel(Model):
         return sum([1 for cell in self.grid.coord_iter() for person in get_cell_content(cell) if person.is_happy()]) / \
                (self.grid.width*self.grid.height)
 
+
+
 class DissimilarityCalculator(object):
     def __init__(self,m,n):
         self.m      = m
@@ -202,6 +206,8 @@ class DissimilarityCalculator(object):
         cell_counts = counts * (counts==indicator)/indicator
         m,n         = cell_counts.shape
         return cell_counts.reshape(m//self.m,self.m,n//self.n,self.n).sum(axis=(1, 3))
+
+
 
 if __name__ == '__main__':
     Palette = array([[255, 255, 255],
@@ -230,13 +236,15 @@ if __name__ == '__main__':
                 moore     = args.neighbourhood=='moore',
                 torus     = args.torus
     )
-    happiness                = [model.get_happiness()]
     dissimilarity_calculator = DissimilarityCalculator(args.granularity[0],args.granularity[1])
-    dissimilarity            = [dissimilarity_calculator.get_dissimilarity(model)]
+
+    model.datacollector      = DataCollector(
+        model_reporters={
+            f'Dissimilarity ({args.granularity[0]}$\\times${args.granularity[1]})' : lambda model: dissimilarity_calculator.get_dissimilarity(model),
+            'Happiness' : lambda model: model.get_happiness()
+        })
     for _ in range(args.N):
         model.step()
-        happiness.append(model.get_happiness())
-        dissimilarity.append(dissimilarity_calculator.get_dissimilarity(model))
 
     fig = figure(figsize=(10,10))
     fig.suptitle(f'{model}')
@@ -245,9 +253,7 @@ if __name__ == '__main__':
     ax1.imshow(Palette[model.get_counts()], interpolation="nearest")
 
     ax2 = fig.add_subplot(2,1,2)
-    ax2.plot(happiness, label = 'Happiness')
-    ax2.plot(dissimilarity, label = f'Dissimilarity ({args.granularity[0]}$\\times${args.granularity[1]})')
-    ax2.legend()
+    model.datacollector.get_model_vars_dataframe().plot(ax=ax2)
 
     fig.savefig(join(args.figs,args.name))
     if args.show:
