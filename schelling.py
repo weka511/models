@@ -12,7 +12,7 @@ from matplotlib.pyplot import figure, show
 from mesa              import Agent, Model
 from mesa.space        import MultiGrid
 from mesa.time         import RandomActivation
-from numpy             import array, count_nonzero, int8, zeros
+from numpy             import array, count_nonzero, int8, sum, zeros
 from os.path           import join
 from random            import shuffle
 
@@ -191,20 +191,15 @@ class DissimilarityCalculator(object):
         self.n      = n
 
     def get_dissimilarity(self,model):
-        counts = model.get_counts()
-        red_counts = self.get_count(counts,1)
-        blue_counts = self.get_count(counts,2)
-        return 0.5 *                                                                                        \
-               sum([abs(red_counts[i,j]/model.nRed - blue_counts[i,j]/model.nBlue)   \
-                   for i in range(self.m)                                                                   \
-                   for j in range(self.n)])
+        Counts      = model.get_counts()
+        Red_counts  = self.get_count(Counts,1)
+        Blue_counts = self.get_count(Counts,2)
+        return 0.5 * sum(abs(Red_counts/model.nRed - Blue_counts/model.nBlue))
 
     def get_count(self,counts,indicator):
         cell_counts = counts * (counts==indicator)/indicator
         m,n         = cell_counts.shape
-        aggregated  = cell_counts.reshape(m//self.m,self.m,n//self.n,self.n).sum(axis=(1, 3))
-
-        return aggregated
+        return cell_counts.reshape(m//self.m,self.m,n//self.n,self.n).sum(axis=(1, 3))
 
 if __name__ == '__main__':
     Palette = array([[255, 255, 255],
@@ -212,8 +207,8 @@ if __name__ == '__main__':
                      [  0,   0, 255]])
 
     parser = ArgumentParser(__doc__)
-    parser.add_argument('--width',         type=int,                           default = 100)
-    parser.add_argument('--height',        type=int,                           default = 100)
+    parser.add_argument('--size',          type=int,   nargs=2,                default = [100,100])
+    parser.add_argument('--granularity',   type = int, nargs=2,                default = [10,10])
     parser.add_argument('--proportions',   type=float, nargs=2,                default = [0.7, 0.2])
     parser.add_argument('--threshold',     type=float,                         default = 1.0/3.0)
     parser.add_argument('--neighbourhood', type=str, choices=['moore', 'von'], default = 'moore')
@@ -224,20 +219,20 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     model = SchellingModel(
-                width     = args.width,
-                height    = args.height,
-                nRed      = int(args.width*args.height*args.proportions[0]),
-                nBlue     = int(args.width*args.height*args.proportions[1]),
+                width     = args.size[0],
+                height    = args.size[1],
+                nRed      = int(args.size[0]*args.size[1]*args.proportions[0]),
+                nBlue     = int(args.size[0]*args.size[1]*args.proportions[1]),
                 threshold = args.threshold,
                 moore     = args.neighbourhood=='moore')
     happiness                = [model.get_happiness()]
-    dissimilarity_calculator = DissimilarityCalculator(10,10)
+    dissimilarity_calculator = DissimilarityCalculator(args.granularity[0],args.granularity[1])
     dissimilarity            = [dissimilarity_calculator.get_dissimilarity(model)]
     for _ in range(args.N):
         model.step()
         happiness.append(model.get_happiness())
         dissimilarity.append(dissimilarity_calculator.get_dissimilarity(model))
-        if happiness[-1]<=happiness[-2]:break
+        # if happiness[-1]<=happiness[-2]:break
 
     fig = figure(figsize=(10,10))
     fig.suptitle(f'{model}')
@@ -247,7 +242,7 @@ if __name__ == '__main__':
 
     ax2 = fig.add_subplot(2,1,2)
     ax2.plot(happiness, label = 'Happiness')
-    ax2.plot(dissimilarity, label = 'Dissimilarity')
+    ax2.plot(dissimilarity, label = f'Dissimilarity ({args.granularity[0]}$\\times${args.granularity[1]})')
     ax2.legend()
 
     fig.savefig(join(args.figs,args.name))
