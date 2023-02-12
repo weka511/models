@@ -12,7 +12,7 @@ from matplotlib.pyplot import figure, show
 from mesa              import Agent, Model
 from mesa.space        import MultiGrid
 from mesa.time         import RandomActivation
-from numpy             import array, int8, zeros
+from numpy             import array, count_nonzero, int8, zeros
 from os.path           import join
 from random            import shuffle
 
@@ -97,7 +97,6 @@ class SchellingModel(Model):
         for i in range(nBlue):
             self.place(Blue(i+nRed, self))
         self.empty     = [(x,y) for x in range(width) for y in range(height) if len(self.grid.get_cell_list_contents((x,y)))==0]
-        self.happiness = [self.get_happiness()]
 
     def __str__(self):
         '''
@@ -124,7 +123,6 @@ class SchellingModel(Model):
         Take one step of model, and update happiness scores
         '''
         self.schedule.step()
-        self.happiness.append(self.get_happiness())
 
     def get_counts(self):
         agent_counts = zeros((self.grid.width, self.grid.height),dtype=int8)
@@ -184,7 +182,29 @@ class SchellingModel(Model):
             cell_content, _,_ = cell
             return cell_content
 
-        return sum([1 for cell in self.grid.coord_iter() for person in get_cell_content(cell) if person.is_happy()])
+        return sum([1 for cell in self.grid.coord_iter() for person in get_cell_content(cell) if person.is_happy()]) / \
+               (self.grid.width*self.grid.height)
+
+class DissimilarityCalculator(object):
+    def __init__(self,m,n):
+        self.m      = m
+        self.n      = n
+
+    def get_dissimilarity(self,model):
+        counts = model.get_counts()
+        red_counts = self.get_count(counts,1)
+        blue_counts = self.get_count(counts,2)
+        return 0.5 *                                                                                        \
+               sum([abs(red_counts[i,j]/model.nRed - blue_counts[i,j]/model.nBlue)   \
+                   for i in range(self.m)                                                                   \
+                   for j in range(self.n)])
+
+    def get_count(self,counts,indicator):
+        cell_counts = counts * (counts==indicator)/indicator
+        m,n         = cell_counts.shape
+        aggregated  = cell_counts.reshape(m//self.m,self.m,n//self.n,self.n).sum(axis=(1, 3))
+
+        return aggregated
 
 if __name__ == '__main__':
     Palette = array([[255, 255, 255],
@@ -210,18 +230,25 @@ if __name__ == '__main__':
                 nBlue     = int(args.width*args.height*args.proportions[1]),
                 threshold = args.threshold,
                 moore     = args.neighbourhood=='moore')
-
+    happiness                = [model.get_happiness()]
+    dissimilarity_calculator = DissimilarityCalculator(10,10)
+    dissimilarity            = [dissimilarity_calculator.get_dissimilarity(model)]
     for _ in range(args.N):
         model.step()
-        if model.happiness[-1]<=model.happiness[-2]:break
+        happiness.append(model.get_happiness())
+        dissimilarity.append(dissimilarity_calculator.get_dissimilarity(model))
+        if happiness[-1]<=happiness[-2]:break
 
     fig = figure(figsize=(10,10))
     fig.suptitle(f'{model}')
+
     ax1 = fig.add_subplot(2,1,1)
     ax1.imshow(Palette[model.get_counts()], interpolation="nearest")
+
     ax2 = fig.add_subplot(2,1,2)
-    ax2.plot(range(len(model.happiness)),model.happiness)
-    ax2.set_ylabel('Happiness')
+    ax2.plot(happiness, label = 'Happiness')
+    ax2.plot(dissimilarity, label = 'Dissimilarity')
+    ax2.legend()
 
     fig.savefig(join(args.figs,args.name))
     if args.show:
