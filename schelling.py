@@ -85,9 +85,10 @@ class SchellingModel(Model):
                  nRed      = 7400,
                  nBlue     = 2400,
                  threshold = 0.25,
-                 moore     = True):
+                 moore     = True,
+                 torus     = True):
         self.schedule  = RandomActivation(self)
-        self.grid      = MultiGrid(width, height, True)
+        self.grid      = MultiGrid(width, height, torus = torus)
         self.threshold = threshold
         self.moore     = moore
         self.nRed      = nRed
@@ -102,9 +103,10 @@ class SchellingModel(Model):
         '''
         Used to generate title for plots
         '''
-        return f'{self.nRed} Red + {self.nBlue} Blue, '                                                          \
-               f'density={(self.nRed + self.nBlue)/(self.grid.width*self.grid.height):.3f}, '                    \
-               f'threshold={self.threshold:.3f}, using {"Moore" if self.moore else "von Neumann"} neighbourhoods'
+        return f'{self.nRed} Red + {self.nBlue} Blue, '                                                           \
+               f'density={(self.nRed + self.nBlue)/(self.grid.width*self.grid.height):.3f}, '                     \
+               f'threshold={self.threshold:.3f}, using {"Moore" if self.moore else "von Neumann"} neighbourhoods' \
+               f'{" on torus" if self.grid.torus else ""}'
 
     def place(self,person):
         '''
@@ -216,6 +218,7 @@ if __name__ == '__main__':
     parser.add_argument('--figs',                                              default = './figs')
     parser.add_argument('--name',                                              default = 'schelling')
     parser.add_argument('--show',          action = 'store_true',              default = False)
+    parser.add_argument('--torus',         action = 'store_true',             default = False)
     args = parser.parse_args()
 
     model = SchellingModel(
@@ -224,7 +227,9 @@ if __name__ == '__main__':
                 nRed      = int(args.size[0]*args.size[1]*args.proportions[0]),
                 nBlue     = int(args.size[0]*args.size[1]*args.proportions[1]),
                 threshold = args.threshold,
-                moore     = args.neighbourhood=='moore')
+                moore     = args.neighbourhood=='moore',
+                torus     = args.torus
+    )
     happiness                = [model.get_happiness()]
     dissimilarity_calculator = DissimilarityCalculator(args.granularity[0],args.granularity[1])
     dissimilarity            = [dissimilarity_calculator.get_dissimilarity(model)]
@@ -232,7 +237,6 @@ if __name__ == '__main__':
         model.step()
         happiness.append(model.get_happiness())
         dissimilarity.append(dissimilarity_calculator.get_dissimilarity(model))
-        # if happiness[-1]<=happiness[-2]:break
 
     fig = figure(figsize=(10,10))
     fig.suptitle(f'{model}')
