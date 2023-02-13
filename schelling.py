@@ -1,5 +1,24 @@
 #!/usr/bin/env python
 
+# Copyright (c) 2023 Simon Crase
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
 
 '''
 Agent Based model for Dynamic Models of Segregation, Thomas Schelling, https://search.iczhiku.com/paper/xfVfSs6TUWsnl2Kl.pdf,
@@ -96,7 +115,7 @@ class SchellingModel(Model):
             self.place(Red(i, self))
         for i in range(nBlue):
             self.place(Blue(i+nRed, self))
-        self.empty     = [(x,y) for x in range(width) for y in range(height) if len(self.grid.get_cell_list_contents((x,y)))==0]
+
 
 
     def __str__(self):
@@ -114,7 +133,7 @@ class SchellingModel(Model):
         '''
         x = self.random.randrange(self.grid.width)
         y = self.random.randrange(self.grid.height)
-        while len(self.grid.get_cell_list_contents((x,y)))>0:
+        while not self.grid.is_cell_empty((x,y)):   # This appears faster than find_empty
             x = self.random.randrange(self.grid.width)
             y = self.random.randrange(self.grid.height)
         self.grid.place_agent(person, (x, y))
@@ -139,23 +158,9 @@ class SchellingModel(Model):
         '''
         Move a person to an empty location
         '''
-        pos = self.find_empty_location(person)
-        if pos!=None:
-            n = len(self.empty)
-            self.empty.remove(pos)
-            self.empty.append(person.pos)
-            assert n== len(self.empty)
-            self.grid.move_agent(person, pos)
+        self.grid.move_agent(person, self.grid.find_empty())
 
-    def find_empty_location(self,person):
-        '''
-        Search empty locations looking for somewhere to move to
-        '''
-        shuffle(self.empty)
-        for pos in self.empty:
-            n_like_me, n_different = self.count_neighbours(person,pos)
-            if self.is_happy(n_like_me,n_different):
-                return pos
+
 
     def is_happy(self,n_like_me,n_different):
         '''
@@ -216,7 +221,7 @@ if __name__ == '__main__':
     parser = ArgumentParser(__doc__)
     parser.add_argument('--size',          type=int,   nargs=2,                default = [100,100])
     parser.add_argument('--granularity',   type = int, nargs=2,                default = [10,10])
-    parser.add_argument('--proportions',   type=float, nargs=2,                default = [0.7, 0.2])
+    parser.add_argument('--proportions',   type=float, nargs=2,                default = [0.49, 0.49])
     parser.add_argument('--threshold',     type=float,                         default = 1.0/3.0)
     parser.add_argument('--neighbourhood', type=str, choices=['moore', 'von'], default = 'moore')
     parser.add_argument('--N',             type=int,                           default = 25)
