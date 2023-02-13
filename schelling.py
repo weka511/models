@@ -29,6 +29,7 @@ from abc               import abstractmethod
 from argparse          import ArgumentParser
 from matplotlib.pyplot import figure, show
 from mesa              import Agent, DataCollector, Model
+from mesa.batchrunner  import batch_run
 from mesa.space        import SingleGrid
 from mesa.time         import RandomActivation
 from numpy             import array, count_nonzero, int8, sum, zeros
@@ -100,23 +101,30 @@ class SchellingModel(Model):
     def __init__(self,
                  width     = 100,
                  height    = 100,
-                 nRed      = 7400,
-                 nBlue     = 2400,
+                 xRed      = 0.45,
+                 xBlue     = 0.45,
                  threshold = 0.25,
                  moore     = True,
-                 torus     = True):
+                 torus     = True,
+                 granularity = [10,10]):
         self.schedule  = RandomActivation(self)
         self.grid      = SingleGrid(width, height, torus = torus)
         self.threshold = threshold
         self.moore     = moore
-        self.nRed      = nRed
-        self.nBlue     = nBlue
-        for i in range(nRed):
+        self.nRed      = int(xRed*width*height)
+        self.nBlue     = int(xBlue*width*height)
+        for i in range(self.nRed):
             self.place(Red(i, self))
-        for i in range(nBlue):
-            self.place(Blue(i+nRed, self))
+        for i in range(self.nBlue):
+            self.place(Blue(i+self.nRed, self))
+        self.running = True
+        dissimilarity_calculator = DissimilarityCalculator(granularity[0],granularity[1])
 
-
+        self.datacollector      = DataCollector(
+            model_reporters={
+                f'Dissimilarity' : lambda model: dissimilarity_calculator.get_dissimilarity(model),
+                'Happiness' : lambda model: model.get_happiness()
+            })
 
     def __str__(self):
         '''
@@ -228,37 +236,44 @@ if __name__ == '__main__':
     parser.add_argument('--figs',                                              default = './figs')
     parser.add_argument('--name',                                              default = 'schelling')
     parser.add_argument('--show',          action = 'store_true',              default = False)
-    parser.add_argument('--torus',         action = 'store_true',             default = False)
+    parser.add_argument('--torus',         action = 'store_true',              default = False)
+    parser.add_argument('--batch',         action = 'store_true',              default = False)
     args = parser.parse_args()
 
-    model = SchellingModel(
-                width     = args.size[0],
-                height    = args.size[1],
-                nRed      = int(args.size[0]*args.size[1]*args.proportions[0]),
-                nBlue     = int(args.size[0]*args.size[1]*args.proportions[1]),
-                threshold = args.threshold,
-                moore     = args.neighbourhood=='moore',
-                torus     = args.torus
-    )
-    dissimilarity_calculator = DissimilarityCalculator(args.granularity[0],args.granularity[1])
+    if args.batch:
+        params = {"width": 10, "height": 10, "threshold": [0.25, 0.33]}
+        results = batch_run(SchellingModel,
+                        parameters             = params,
+                        iterations             = 5,
+                        max_steps              = 100,
+                        number_processes       = 1,
+                        data_collection_period = 1,
+                        display_progress       = True,
+                        )
+    else:
+        model = SchellingModel(
+                    width       = args.size[0],
+                    height      = args.size[1],
+                    xRed        = args.proportions[0],
+                    xBlue       = args.proportions[1],
+                    threshold   = args.threshold,
+                    moore       = args.neighbourhood=='moore',
+                    torus       = args.torus,
+                    granularity = args.granularity
+        )
 
-    model.datacollector      = DataCollector(
-        model_reporters={
-            f'Dissimilarity' : lambda model: dissimilarity_calculator.get_dissimilarity(model),
-            'Happiness' : lambda model: model.get_happiness()
-        })
-    for _ in range(args.N):
-        model.step()
+        for _ in range(args.N):
+            model.step()
 
-    fig = figure(figsize=(10,10))
-    fig.suptitle(f'{model}')
+        fig = figure(figsize=(10,10))
+        fig.suptitle(f'{model}')
 
-    ax1 = fig.add_subplot(2,1,1)
-    ax1.imshow(Palette[model.get_counts()], interpolation="nearest")
+        ax1 = fig.add_subplot(2,1,1)
+        ax1.imshow(Palette[model.get_counts()], interpolation="nearest")
 
-    ax2 = fig.add_subplot(2,1,2)
-    model.datacollector.get_model_vars_dataframe().plot(ax=ax2)
+        ax2 = fig.add_subplot(2,1,2)
+        model.datacollector.get_model_vars_dataframe().plot(ax=ax2)
 
-    fig.savefig(join(args.figs,args.name))
-    if args.show:
-        show()
+        fig.savefig(join(args.figs,args.name))
+        if args.show:
+            show()
