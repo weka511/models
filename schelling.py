@@ -10,7 +10,7 @@ from abc               import abstractmethod
 from argparse          import ArgumentParser
 from matplotlib.pyplot import figure, show
 from mesa              import Agent, DataCollector, Model
-from mesa.space        import MultiGrid
+from mesa.space        import SingleGrid
 from mesa.time         import RandomActivation
 from numpy             import array, count_nonzero, int8, sum, zeros
 from os.path           import join
@@ -87,7 +87,7 @@ class SchellingModel(Model):
                  moore     = True,
                  torus     = True):
         self.schedule  = RandomActivation(self)
-        self.grid      = MultiGrid(width, height, torus = torus)
+        self.grid      = SingleGrid(width, height, torus = torus)
         self.threshold = threshold
         self.moore     = moore
         self.nRed      = nRed
@@ -131,8 +131,8 @@ class SchellingModel(Model):
         agent_counts = zeros((self.grid.width, self.grid.height),dtype=int8)
         for cell in self.grid.coord_iter():
             cell_content, x, y = cell
-            for person in cell_content:
-                agent_counts[x][y] = person.get_indicator()
+            if cell_content != None:
+                agent_counts[x][y] = cell_content.get_indicator()
         return agent_counts
 
     def move(self,person):
@@ -179,14 +179,13 @@ class SchellingModel(Model):
 
     def get_happiness(self):
         '''
-        Calculate total happiness of all people
+        Calculate average happiness of all people
         '''
-        def get_cell_content(cell):
-            cell_content, _,_ = cell
-            return cell_content
 
-        return sum([1 for cell in self.grid.coord_iter() for person in get_cell_content(cell) if person.is_happy()]) / \
-               (self.grid.width*self.grid.height)
+        return sum([1 for person,_,_ in self.grid.coord_iter() if person != None and person.is_happy()]) / self.get_area()
+
+    def get_area(self):
+        return self.grid.width*self.grid.height
 
 
 
