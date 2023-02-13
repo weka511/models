@@ -207,7 +207,8 @@ class DissimilarityCalculator(object):
         m,n         = cell_counts.shape
         return cell_counts.reshape(m//self.m,self.m,n//self.n,self.n).sum(axis=(1, 3))
 
-
+    def __str__(self):
+        return f'({self.m}$\\times${self.n})'
 
 if __name__ == '__main__':
     Palette = array([[255, 255, 255],
@@ -240,7 +241,7 @@ if __name__ == '__main__':
 
     model.datacollector      = DataCollector(
         model_reporters={
-            f'Dissimilarity ({args.granularity[0]}$\\times${args.granularity[1]})' : lambda model: dissimilarity_calculator.get_dissimilarity(model),
+            f'Dissimilarity' : lambda model: dissimilarity_calculator.get_dissimilarity(model),
             'Happiness' : lambda model: model.get_happiness()
         })
     for _ in range(args.N):
