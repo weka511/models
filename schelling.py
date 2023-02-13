@@ -49,7 +49,6 @@ class Person(Agent):
         '''
         n_like_me, n_different = self.count_neighbours()
         return self.model.is_happy(n_like_me,n_different)
-        # return n_like_me >= self.model.threshold * (n_like_me+n_different)
 
     def count_neighbours(self):
         '''
