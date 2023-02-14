@@ -34,6 +34,7 @@ from mesa.space        import SingleGrid
 from mesa.time         import RandomActivation
 from numpy             import array, count_nonzero, int8, sum, zeros
 from os.path           import join
+from pandas            import DataFrame
 from random            import shuffle
 
 
@@ -117,7 +118,7 @@ class SchellingModel(Model):
             self.place(Red(i, self))
         for i in range(self.nBlue):
             self.place(Blue(i+self.nRed, self))
-        self.running = True
+        self.running             = True
         dissimilarity_calculator = DissimilarityCalculator(granularity[0],granularity[1])
 
         self.datacollector      = DataCollector(
@@ -201,6 +202,31 @@ class SchellingModel(Model):
         return self.grid.width*self.grid.height
 
 
+def parse_params(file_name):
+    def parse(s):
+        if s.isnumeric():
+            return int(s)
+        try:
+            return float(s)
+        except ValueError:
+            pass
+        if s.title()=='False':
+            return False
+        if s.title()=='True':
+            return True
+
+    def parse_arg(s):
+        parts = s.split(',')
+        return parse(s) if len(parts)==1 else [parse(s.strip()) for s in parts]
+
+    Product = dict()
+    with open(file_name) as f:
+        for line in f.readlines():
+            parts = line.split(':')
+            Product[parts[0].strip()] = parse_arg(parts[1].strip())
+
+    return Product
+
 
 class DissimilarityCalculator(object):
     def __init__(self,m,n):
@@ -237,19 +263,22 @@ if __name__ == '__main__':
     parser.add_argument('--name',                                              default = 'schelling')
     parser.add_argument('--show',          action = 'store_true',              default = False)
     parser.add_argument('--torus',         action = 'store_true',              default = False)
-    parser.add_argument('--batch',         action = 'store_true',              default = False)
+    parser.add_argument('--batch',                                             default = False)
+    parser.add_argument('--processes',     type=int)
+    parser.add_argument('--iterations',    type=int,                           default = 5)
+    parser.add_argument('--out',                                               default = 'schelling.csv')
     args = parser.parse_args()
-
     if args.batch:
-        params = {"width": 10, "height": 10, "threshold": [0.25, 0.33]}
         results = batch_run(SchellingModel,
-                        parameters             = params,
-                        iterations             = 5,
-                        max_steps              = 100,
-                        number_processes       = 1,
+                        parameters             = parse_params(args.batch),
+                        iterations             = args.iterations,
+                        max_steps              = args.N,
+                        number_processes       = args.processes,
                         data_collection_period = 1,
                         display_progress       = True,
                         )
+        df = DataFrame(results)
+        df.to_csv(args.out)
     else:
         model = SchellingModel(
                     width       = args.size[0],
