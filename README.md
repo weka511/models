@@ -5,6 +5,7 @@ File|Description
 ----------------|------------------------------------------------------------------
 El Farol.nlogo|El Farol bar problem
 Immigration.nlogo|This is an extension of Uri Wilensky’s Segregation Model, which was based on Thomas Schelling’s Model of Segregation.
+params.txt|Sample parameter file for schelling.py
 schelling.py|[Agent Based model for Dynamic Models of Segregation, Thomas Schelling](https://search.iczhiku.com/paper/xfVfSs6TUWsnl2Kl.pdf),
 implemented in mesa --  https://mesa.readthedocs.io/en/stable/tutorials/intro_tutorial.html
 skins.nlogo|Model the rules that some Aboriginal groups have created to preserve animals.
